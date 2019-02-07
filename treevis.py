@@ -7,10 +7,9 @@ SCREEN_WIDTH = 500
 SCREEN_TITLE = "500"
 
 
-def generalizedPythagorasTree(H, arcade):
+def generalizedPythagorasTree(H):
     R = H.data
-    R.draw(arcade)
-    if not H.children: 
+    if not H.children:
         return
     f = pi / sum([n.w for n in H.children])
     a = []
@@ -19,24 +18,38 @@ def generalizedPythagorasTree(H, arcade):
         a.append(n.w * f)
         x = R.x * sin(a[i]/2)
         y = R.y * sin(a[i]/2)
+
         c = computeCenter(R.c, R.x, R.y, R.t, a, x, y)
+
         t = computeSlope(R.t, a)
+
         r = G.Rectangle(c, x, y, t)
         n.data = r
-        generalizedPythagorasTree(n, arcade)
+        generalizedPythagorasTree(n)
+
+
+def drawGPT(H):
+    H.data.draw(arcade)
+    if not H.children: 
+        return
+    for n in H.children:
+        drawGPT(n)
 
 
 def computeCenter(Rc, Rx, Ry, Rt, a, x, y):
     ap = sum(a[:-1]) + a[-1]/2
     l = y/2 + abs(cos(ap) * Rx/2)
-    dx = cos(ap) * l
-    dy = sin(ap) * l
+    print(y/2, abs(cos(ap) * Rx/2), Rx/2)
+    print(l)
+    dx = -cos(ap+Rt) * l
+    dy = sin(ap+Rt) * l
+
+    arcade.draw_circle_filled(Rc[0] + sin(Rt)*Rx/2, Rc[1] + cos(Rt)*Ry/2, 2, arcade.color.GREEN)
     return (Rc[0] + sin(Rt)*Rx/2 + dx, Rc[1] + cos(Rt)*Ry/2 + dy)
 
 
 def computeSlope(Rt, a):
-    # yikes
-    return Rt + sum(a[:-1]) + a[-1]/2 + 0.3
+    return Rt + sum(a[:-1]) + a[-1]/2 - pi/2
 
 
 class MyGame(arcade.Window):
@@ -55,7 +68,7 @@ class MyGame(arcade.Window):
     def on_draw(self):
         """ Called whenever we need to draw the window. """
         arcade.start_render()
-        generalizedPythagorasTree(self.root, arcade)
+        drawGPT(self.root)
 
 
 def main():
@@ -72,6 +85,7 @@ def main():
                 nodes[i].addChild(nodes[int(l.pop(0))])
 
     root.data = G.Rectangle((250, 100), 100, 100, 0)
+    generalizedPythagorasTree(root)
     window = MyGame(SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_TITLE, root)
     arcade.run()
 
