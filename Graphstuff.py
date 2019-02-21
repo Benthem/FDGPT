@@ -28,7 +28,7 @@ class Rectangle(object):
         self.t = t
 
     def offsetcenter(self, dx, dy, dt, rc, zoom):
-        #print('Old values for rect (' + str(self.c[0]) + ', ' + str(self.c[1]) + ')')
+        # print('Old values for rect (' + str(self.c[0]) + ', ' + str(self.c[1]) + ')')
         # rotate around rc
         cx = self.c[0] - rc[0]
         cy = self.c[1] - rc[1]
@@ -39,17 +39,17 @@ class Rectangle(object):
         newy *= zoom
         newx += dx + rc[0]
         newy += dy + rc[1]
-        #print('New values for rect (' + str(newx) + ', ' + str(newy) + ')')
+        # print('New values for rect (' + str(newx) + ', ' + str(newy) + ')')
 
         return (newx, newy)
 
     def draw(self, arcade, dx, dy, dt, rx, ry, zoom):
         arcade.draw_rectangle_filled(
             *self.offsetcenter(dx, dy, dt, (rx, ry), zoom),
-                self.x * zoom,
-                self.y * zoom,
-                color=(255, 0, 0, 100),
-                tilt_angle=(pi/2 - self.t + dt)*180/3.141592)
+            self.x * zoom,
+            self.y * zoom,
+            color=(255, 0, 0, 100),
+            tilt_angle=(pi / 2 - self.t + dt) * 180 / 3.141592)
 
     def __str__(self):
         return "c%d,%d x%d y%d t%f" % (*self.c, self.x, self.y, self.t)

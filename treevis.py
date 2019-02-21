@@ -9,6 +9,9 @@ SCREEN_HEIGHT = 1000
 SCREEN_WIDTH = 1000
 SCREEN_TITLE = "500"
 
+FILE = "input/filetree.in"
+
+
 def treeToList(root):
     newnodes = [root.data]
     if not root.children:
@@ -17,6 +20,7 @@ def treeToList(root):
         for child in root.children:
             newnodes.extend(treeToList(child))
         return newnodes
+
 
 def generalizedPythagorasTree(H):
     R = H.data
@@ -27,8 +31,8 @@ def generalizedPythagorasTree(H):
     for i in range(len(H.children)):
         n = H.children[i]
         a.append(n.w * f)
-        x = R.x * sin(a[i]/2)
-        y = R.y * sin(a[i]/2)
+        x = R.x * sin(a[i] / 2)
+        y = R.y * sin(a[i] / 2)
 
         c = computeCenter(R.c, R.x, R.y, R.t, a, x, y)
 
@@ -40,26 +44,28 @@ def generalizedPythagorasTree(H):
 
 
 def drawGPT(H, focus):
-    H.data.draw(arcade, focus[0], focus[1], focus[2], focus[3], focus[4], focus[5])
-    if not H.children: 
+    H.data.draw(arcade, focus[0], focus[1], focus[2],
+                focus[3], focus[4], focus[5])
+    if not H.children:
         return
     for n in H.children:
         drawGPT(n, focus)
 
 
 def computeCenter(Rc, Rx, Ry, Rt, a, x, y):
-    ap = sum(a[:-1]) + a[-1]/2
-    l = y/2 + abs(cos(a[-1]/2) * Rx/2)
+    ap = sum(a[:-1]) + a[-1] / 2
+    length = y / 2 + abs(cos(a[-1] / 2) * Rx / 2)
     print(l)
-    dx = -cos(ap+Rt) * l
-    dy = sin(ap+Rt) * l
+    dx = -cos(ap + Rt) * length
+    dy = sin(ap + Rt) * length
 
-    arcade.draw_circle_filled(Rc[0] + sin(Rt)*Rx/2, Rc[1] + cos(Rt)*Ry/2, 2, arcade.color.GREEN)
-    return (Rc[0] + sin(Rt)*Rx/2 + dx, Rc[1] + cos(Rt)*Ry/2 + dy)
+    arcade.draw_circle_filled(
+        Rc[0] + sin(Rt) * Rx / 2, Rc[1] + cos(Rt) * Ry / 2, 2, arcade.color.GREEN)
+    return (Rc[0] + sin(Rt) * Rx / 2 + dx, Rc[1] + cos(Rt) * Ry / 2 + dy)
 
 
 def computeSlope(Rt, a):
-    return Rt + sum(a[:-1]) + a[-1]/2 - pi/2
+    return Rt + sum(a[:-1]) + a[-1] / 2 - pi / 2
 
 
 class MyGame(arcade.Window):
@@ -71,7 +77,8 @@ class MyGame(arcade.Window):
         if len(self.startfocus) == 0 or len(self.endfocus) == 0 or len(self.focus) == 0:
             return
         for i in range(0, len(self.focus)):
-            self.focus[i] += (self.endfocus[i] - self.startfocus[i])/self.interpolationtime
+            self.focus[i] += (self.endfocus[i] -
+                              self.startfocus[i]) / self.interpolationtime
         self.interpolationcounter += 1
         # done interpolating
         if self.interpolationcounter == self.interpolationtime:
@@ -97,19 +104,19 @@ class MyGame(arcade.Window):
         self.focus = []
         self.interpolationtime = 60
         self.interpolationcounter = 0
-        arcade.schedule(self.interpolate, 1/60)
+        arcade.schedule(self.interpolate, 1 / 60)
         self.focusrect = self.nodelist[0]
         self.focus = self.setfocus(self.focusrect)
         self.startfocus = self.focus[:]
         self.focusstack = []
 
-
     # the offset for drawing, when focused on rect
     def setfocus(self, rect):
         # zoom constant, 0.5 means 50% of screen width must be covered by focused rectangle width
         zoomc = 0.2
-        yoffset = SCREEN_HEIGHT/4
-        focus = [-rect.c[0] + SCREEN_WIDTH/2, -rect.c[1] + SCREEN_HEIGHT/2 - yoffset, rect.t, rect.c[0], rect.c[1], SCREEN_WIDTH/rect.x * zoomc]
+        yoffset = SCREEN_HEIGHT / 4
+        focus = [-rect.c[0] + SCREEN_WIDTH / 2, -rect.c[1] + SCREEN_HEIGHT / 2 -
+                 yoffset, rect.t, rect.c[0], rect.c[1], SCREEN_WIDTH / rect.x * zoomc]
         return focus
 
     def focus_on(self, rect):
@@ -129,8 +136,10 @@ class MyGame(arcade.Window):
             newy = y - self.focus[1] - self.focus[4]
             newx /= self.focus[5]
             newy /= self.focus[5]
-            oldx = newx * cos(-1*self.focus[2]) - newy * sin(-1*self.focus[2])
-            oldy = newx * sin(-1*self.focus[2]) + newy * cos(-1*self.focus[2])
+            oldx = newx * cos(-1 * self.focus[2]) - \
+                newy * sin(-1 * self.focus[2])
+            oldy = newx * sin(-1 * self.focus[2]) + \
+                newy * cos(-1 * self.focus[2])
             oldx += self.focus[3]
             oldy += self.focus[4]
 
@@ -143,7 +152,7 @@ class MyGame(arcade.Window):
                 ry = nx * sin(rect.t) + ny * cos(rect.t)
                 rx += rect.c[0]
                 ry += rect.c[1]
-                if math.fabs(rx - rect.c[0]) < rect.x/2 and math.fabs(ry - rect.c[1]) < rect.y/2:
+                if math.fabs(rx - rect.c[0]) < rect.x / 2 and math.fabs(ry - rect.c[1]) < rect.y / 2:
                     clicked = rect
 
             if clicked is not None:
@@ -152,7 +161,6 @@ class MyGame(arcade.Window):
                 self.focusrect = clicked
                 self.focus_on(self.focusrect)
 
-
     def on_draw(self):
         """ Called whenever we need to draw the window. """
         arcade.start_render()
@@ -160,7 +168,7 @@ class MyGame(arcade.Window):
 
 
 def main():
-    with open('sometree.in', 'r') as f:
+    with open(FILE, 'r') as f:
         s = f.read().split('\n')
         n = int(s.pop(0))
         nodes = [G.Node(i) for i in range(n)]
