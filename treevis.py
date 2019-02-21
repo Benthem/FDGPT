@@ -5,6 +5,9 @@ from math import sin, cos, pi
 SCREEN_HEIGHT = 500
 SCREEN_WIDTH = 500
 SCREEN_TITLE = "500"
+g = {}
+g['x'] = 0
+g['y'] = 0
 
 
 def generalizedPythagorasTree(H):
@@ -29,7 +32,7 @@ def generalizedPythagorasTree(H):
 
 
 def drawGPT(H):
-    H.data.draw(arcade)
+    H.data.draw(arcade, g['x'], g['y'])
     if not H.children: 
         return
     for n in H.children:
@@ -38,9 +41,8 @@ def drawGPT(H):
 
 def computeCenter(Rc, Rx, Ry, Rt, a, x, y):
     ap = sum(a[:-1]) + a[-1]/2
-    l = y/2 + abs(cos(ap) * Rx/2)
-    print(y/2, abs(cos(ap) * Rx/2), Rx/2)
-    print(l)
+    l = y/2 + abs(cos(a[-1]/2) * Rx/2)
+
     dx = -cos(ap+Rt) * l
     dy = sin(ap+Rt) * l
 
@@ -70,8 +72,21 @@ class MyGame(arcade.Window):
         arcade.start_render()
         drawGPT(self.root)
 
+    def on_mouse_press(self, x, y, button, modifiers):
+        """
+        Called when the user presses a mouse button.
+        """
+        if button == arcade.MOUSE_BUTTON_LEFT:
+            g['x'] = x
+            g['y'] = y
+
+    def on_mouse_release(self, x, y, button, modifiers):
+        g['x'] = 0
+        g['y'] = 0
+
 
 def main():
+    #arcade[x] = 0, arcade[y] = 0
     with open('sometree.in', 'r') as f:
         s = f.read().split('\n')
         n = int(s.pop(0))

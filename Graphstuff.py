@@ -25,12 +25,16 @@ class Rectangle(object):
         self.y = y
         self.t = t
 
-    def draw(self, arcade):
+    def draw(self, arcade, ax=0, ay=0):
+        if (ax-self.c[0])*(ax-self.c[0]) + (ay-self.c[1])*(ay-self.c[1]) < (self.x/2)*(self.x/2) + (self.y/2)*(self.y/2):
+            c = (255, 0, 0, 255)
+        else:
+            c = (255, 0, 0, 100)
         arcade.draw_rectangle_filled(
                 *self.c, 
                 self.x,
                 self.y, 
-                color=(255, 0, 0, 100),
+                color=c,
                 tilt_angle=(pi/2 - self.t)*180/3.141592)
 
     def __str__(self):
