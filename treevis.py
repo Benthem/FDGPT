@@ -8,9 +8,6 @@ from math import sin, cos, pi
 SCREEN_HEIGHT = 1000
 SCREEN_WIDTH = 1000
 SCREEN_TITLE = "500"
-g = {}
-g['x'] = 0
-g['y'] = 0
 
 FILE = "input/filetree.in"
 
@@ -58,7 +55,7 @@ def drawGPT(H, focus):
 def computeCenter(Rc, Rx, Ry, Rt, a, x, y):
     ap = sum(a[:-1]) + a[-1] / 2
     length = y / 2 + abs(cos(a[-1] / 2) * Rx / 2)
-    print(l)
+    print(length)
     dx = -cos(ap + Rt) * length
     dy = sin(ap + Rt) * length
 
@@ -166,18 +163,6 @@ class MyGame(arcade.Window):
         """ Called whenever we need to draw the window. """
         arcade.start_render()
         drawGPT(self.root, self.focus)
-
-    def on_mouse_press(self, x, y, button, modifiers):
-        """
-        Called when the user presses a mouse button.
-        """
-        if button == arcade.MOUSE_BUTTON_LEFT:
-            g['x'] = x
-            g['y'] = y
-
-    def on_mouse_release(self, x, y, button, modifiers):
-        g['x'] = 0
-        g['y'] = 0
 
 
 def main():
