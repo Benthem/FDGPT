@@ -42,7 +42,7 @@ def drawGPT(H):
 def computeCenter(Rc, Rx, Ry, Rt, a, x, y):
     ap = sum(a[:-1]) + a[-1]/2
     l = y/2 + abs(cos(a[-1]/2) * Rx/2)
-
+    #print(l)
     dx = -cos(ap+Rt) * l
     dy = sin(ap+Rt) * l
 
@@ -86,7 +86,6 @@ class MyGame(arcade.Window):
 
 
 def main():
-    #arcade[x] = 0, arcade[y] = 0
     with open('sometree.in', 'r') as f:
         s = f.read().split('\n')
         n = int(s.pop(0))
