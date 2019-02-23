@@ -12,6 +12,12 @@ SCREEN_TITLE = "500"
 FILE = "input/filetree.in"
 
 
+def ellipseCoord(a, b, phi, r):
+    polar = (a*b)/(math.sqrt(math.pow(b * math.cos(phi), 2) + math.pow(a * math.sin(phi), 2)))
+    x = polar * math.cos(phi) * r
+    y = polar * math.sin(phi) * r
+    return x, y
+
 def treeToList(root):
     newnodes = [root.data]
     if not root.children:
@@ -28,17 +34,31 @@ def generalizedPythagorasTree(H):
         return
     f = pi / sum([n.w for n in H.children])
     a = []
+
+    # ellipse shape for the children of this node, x²/a² + y²/b² = 1
+    # you don't really wanna change a = 1 as this ensures the tree properly fits
+    e_a = 1
+    e_b = random.randint(1, 3)
     for i in range(len(H.children)):
         n = H.children[i]
         a.append(n.w * f)
-        x = R.x * sin(a[i] / 2)
-        y = R.y * sin(a[i] / 2)
 
-        c = computeCenter(R.c, R.x, R.y, R.t, a, x, y)
+        # calculate width of child using ellipse coords
+        startx, starty = ellipseCoord(e_a, e_b, sum(a[:-1]), R.y)
+        endx, endy = ellipseCoord(e_a, e_b, sum(a), R.y)
+        lwidth = math.sqrt(math.pow(endx - startx, 2) + math.pow(endy - starty, 2)) / 2
+        # calculate angle of points for use in calculating the angle
+        langle = math.atan2(endy-starty, endx-startx)
 
-        t = computeSlope(R.t, a)
+        # width (now y-coordinate) of child
+        width = lwidth
+        # same ratio as before for height
+        height = R.x * math.sin(a[i]/2)
 
-        r = G.Rectangle(c, x, y, t)
+        t = computeSlopeEllipse(R.t, langle)
+        c = computeCenterEllipse(R.c, R.x, R.y, R.t, a, width, height, t, e_a, e_b)
+
+        r = G.Rectangle(c, height, width, t)
         n.data = r
         generalizedPythagorasTree(n)
 
@@ -50,6 +70,39 @@ def drawGPT(H, focus):
         return
     for n in H.children:
         drawGPT(n, focus)
+
+
+def translateAtAngle(x, y, angle, dx, dy):
+    x = x + dx * cos(angle) - dy * sin(angle)
+    y = y + dx * sin(angle) + dy * cos(angle)
+    return x, y
+
+
+def computeSlopeEllipse(Rt, langle):
+    t = (langle * -1 - pi + Rt) % (2 * pi)
+    if t > pi:
+        t -= 2 * pi
+    return t
+
+
+def computeCenterEllipse(Rc, Rx, Ry, Rt, a, width, height, t, e_a, e_b):
+    r = Ry/2
+    #print('Rx: ' + str(Rx) + ', Ry: ' + str(Ry) + ', Rt: ' + str(Rt) + ', sum(a[:-1]):' + str(sum(a[:-1])) + ', sum(a):' + str(sum(a)))
+    # get top of rect
+    x, y = translateAtAngle(Rc[0], Rc[1], Rt*-1, 0, Rx/2)
+    dxs, dys = ellipseCoord(e_a, e_b, sum(a[:-1]), r)
+    dxe, dye = ellipseCoord(e_a, e_b, sum(a), r)
+    # map to our coords
+    sx, sy = translateAtAngle(x, y, Rt*-1, dxs, dys)
+    ex, ey = translateAtAngle(x, y, Rt*-1, dxe, dye)
+
+    # middle of 2 ellipse points
+    mx = (ex+sx)/2
+    my = (ey+sy)/2
+    # offset them to new center
+    fx, fy = translateAtAngle(mx, my, t*-1, 0, height/2)
+    # return
+    return fx, fy
 
 
 def computeCenter(Rc, Rx, Ry, Rt, a, x, y):
@@ -65,7 +118,7 @@ def computeCenter(Rc, Rx, Ry, Rt, a, x, y):
 
 
 def computeSlope(Rt, a):
-    return Rt + sum(a[:-1]) + a[-1] / 2 - pi / 2
+    return Rt + sum(a[:-1]) + a[-1] / 2 - pi/2
 
 
 class MyGame(arcade.Window):
@@ -101,7 +154,7 @@ class MyGame(arcade.Window):
         self.startfocus = []
         self.endfocus = []
         self.focus = []
-        self.interpolationtime = 60
+        self.interpolationtime = 14
         self.interpolationcounter = 0
         arcade.schedule(self.interpolate, 1 / 60)
         self.focusrect = self.nodelist[0]
@@ -114,7 +167,7 @@ class MyGame(arcade.Window):
         # zoom constant, 0.5 means 50% of screen width must be covered by focused rectangle width
         zoomc = 0.2
         yoffset = SCREEN_HEIGHT / 4
-        focus = [-rect.c[0] + SCREEN_WIDTH / 2, -rect.c[1] + SCREEN_HEIGHT / 2 - yoffset, rect.t, rect.c[0], rect.c[1], SCREEN_WIDTH / rect.x * zoomc]
+        focus = [-rect.c[0] + SCREEN_WIDTH / 2, -rect.c[1] + SCREEN_HEIGHT / 2 - yoffset, rect.t, rect.c[0], rect.c[1], SCREEN_WIDTH / rect.y * zoomc]
         return focus
 
     def focus_on(self, rect):
@@ -150,7 +203,7 @@ class MyGame(arcade.Window):
                 ry = nx * sin(rect.t) + ny * cos(rect.t)
                 rx += rect.c[0]
                 ry += rect.c[1]
-                if math.fabs(rx - rect.c[0]) < rect.x / 2 and math.fabs(ry - rect.c[1]) < rect.y / 2:
+                if math.fabs(rx - rect.c[0]) < rect.y / 2 and math.fabs(ry - rect.c[1]) < rect.x / 2:
                     clicked = rect
 
             if clicked is not None:
