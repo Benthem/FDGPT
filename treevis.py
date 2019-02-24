@@ -38,7 +38,7 @@ def generalizedPythagorasTree(H):
     # ellipse shape for the children of this node, x²/a² + y²/b² = 1
     # you don't really wanna change a = 1 as this ensures the tree properly fits
     e_a = 1
-    e_b = random.randint(1, 3)
+    e_b = 2
     for i in range(len(H.children)):
         n = H.children[i]
         a.append(n.w * f)
@@ -123,6 +123,9 @@ def computeSlope(Rt, a):
 
 class MyGame(arcade.Window):
     def interpolate(self, deltatime):
+        # interpolate scales with fps
+        dspeed = deltatime / (1 / self.fps)
+
         # don't interpolate if finished
         if self.interpolationcounter >= self.interpolationtime:
             return
@@ -130,10 +133,11 @@ class MyGame(arcade.Window):
         if len(self.startfocus) == 0 or len(self.endfocus) == 0 or len(self.focus) == 0:
             return
         for i in range(0, len(self.focus)):
-            self.focus[i] += (self.endfocus[i] - self.startfocus[i]) / self.interpolationtime
-        self.interpolationcounter += 1
+            self.focus[i] += (self.endfocus[i] - self.startfocus[i]) / self.interpolationtime * dspeed
+        self.interpolationcounter += 1 * dspeed
         # done interpolating
-        if self.interpolationcounter == self.interpolationtime:
+        if self.interpolationcounter >= self.interpolationtime:
+            self.focus = self.endfocus[:]
             self.startfocus = self.focus[:]
 
     def __init__(self, width, height, title, root):
@@ -154,9 +158,10 @@ class MyGame(arcade.Window):
         self.startfocus = []
         self.endfocus = []
         self.focus = []
-        self.interpolationtime = 14
+        self.fps = 60
+        self.interpolationtime = 60
         self.interpolationcounter = 0
-        arcade.schedule(self.interpolate, 1 / 60)
+        arcade.schedule(self.interpolate, 1 / self.fps)
         self.focusrect = self.nodelist[0]
         self.focus = self.setfocus(self.focusrect)
         self.startfocus = self.focus[:]
