@@ -41,15 +41,18 @@ class Rectangle(object):
         xs, ys = zip(*self.corners)
         self.bbox = (min(xs), min(ys), max(xs), max(ys))
 
+    def overlaps(self, rect):
+        return any([self.pointinside(*corner) for corner in rect.corners])
+
     def pointinside(self, x, y):
-            # rotate locally per rect to check if it falls inside
-            nx = x - self.c[0]
-            ny = y - self.c[1]
-            rx = nx * cos(self.t) - ny * sin(self.t)
-            ry = nx * sin(self.t) + ny * cos(self.t)
-            rx += self.c[0]
-            ry += self.c[1]
-            return math.fabs(rx - self.c[0]) < self.y / 2 and math.fabs(ry - self.c[1]) < self.x / 2
+        # rotate locally per rect to check if it falls inside
+        nx = x - self.c[0]
+        ny = y - self.c[1]
+        rx = nx * cos(self.t) - ny * sin(self.t)
+        ry = nx * sin(self.t) + ny * cos(self.t)
+        rx += self.c[0]
+        ry += self.c[1]
+        return math.fabs(rx - self.c[0]) < self.y / 2 and math.fabs(ry - self.c[1]) < self.x / 2
 
     def offsetpoint(self, px, py, dx, dy, dt, rc, zoom):
         # print('Old values for rect (' + str(self.c[0]) + ', ' + str(self.c[1]) + ')')

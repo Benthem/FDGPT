@@ -14,31 +14,29 @@ class TreeStruct:
     ##
     # Maintain link from points to rectangle objects?
     def __init__(self):
-        self.index = Index(bbox=self.bbox)
+        self.index = Index(bbox=self.bbox, max_items=40, max_depth=40)
 
     def addRect(self, rect):
+        if (bboxoutside(rect.bbox, self.bbox)):
+            print('outside')
+            pass  # TODO
 
-        # TODO if rect outside bbox, make a new one.
-        if (bboxoutside(rect.bbox, self.bbox))
-
-        index.insert(rect, rect.bbox)
-
-        pass
+        self.index.insert(rect, rect.bbox)
 
     def removeRect(self, rect):
-        index.remove(rect, rect.bbox)
+        self.index.remove(rect, rect.bbox)
 
     def query(self, rect):
-        candidates = index.query(rect.bbox)
-
-
-        # Compute radius based on size and angle
-        # Then query for points
-        # Then figure out which points are actually within the query rectangle.
+        candidates = self.index.intersect(rect.bbox)
+        # TBD if we want to make the check both ways or are okay with overlaps only being detected on one end
+        return [candidate for candidate in candidates if rect.overlaps(candidate) or candidate.overlaps(rect)]
 
 
 tree = TreeStruct()
 tree.addRect(Rectangle((0, 0), 2, 1, pi / 3))
+tree.addRect(Rectangle((2, 2), 2, 2, 0))
+tree.addRect(Rectangle((0, 3), 1.5, 1.5, pi / 4))
+print(tree.query(Rectangle((-1, -1), 2, 2, 0)))
 
 '''
 sklearn KDTree
