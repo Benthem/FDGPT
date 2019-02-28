@@ -3,6 +3,11 @@ from Graphstuff import *
 from math import sin, cos, pi
 
 
+# Checks if b1 is outside b2
+def bboxoutside(b1, b2):
+    return (b1[0] < b2[0] or b1[1] < b2[1] or b1[2] > b2[2] or b1[3] > b2[3])
+
+
 class TreeStruct:
     bbox = (-1000, -1000, 1000, 1000)
 
@@ -12,8 +17,12 @@ class TreeStruct:
         self.index = Index(bbox=self.bbox)
 
     def addRect(self, rect):
-        # compute corner points
+
+        # TODO if rect outside bbox, make a new one.
+        if (bboxoutside(rect.bbox, self.bbox))
+
         index.insert(rect, rect.bbox)
+
         pass
 
     def removeRect(self, rect):
@@ -21,7 +30,8 @@ class TreeStruct:
 
     def query(self, rect):
         candidates = index.query(rect.bbox)
-        
+
+
         # Compute radius based on size and angle
         # Then query for points
         # Then figure out which points are actually within the query rectangle.

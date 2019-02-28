@@ -49,12 +49,12 @@ def generalizedPythagorasTree(H):
         endx, endy = ellipseCoord(e_a, e_b, sum(a), R.y)
         lwidth = math.sqrt(math.pow(endx - startx, 2) + math.pow(endy - starty, 2)) / 2
         # calculate angle of points for use in calculating the angle
-        langle = math.atan2(endy-starty, endx-startx)
+        langle = math.atan2(endy - starty, endx - startx)
 
         # width (now y-coordinate) of child
         width = lwidth
         # same ratio as before for height
-        height = R.x * math.sin(a[i]/2)
+        height = R.x * math.sin(a[i] / 2)
 
         t = computeSlopeEllipse(R.t, langle)
         c = computeCenterEllipse(R.c, R.x, R.y, R.t, a, width, height, t, e_a, e_b)
@@ -113,7 +113,7 @@ def computeCenter(Rc, Rx, Ry, Rt, a, x, y):
 
 
 def computeSlope(Rt, a):
-    return Rt + sum(a[:-1]) + a[-1] / 2 - pi/2
+    return Rt + sum(a[:-1]) + a[-1] / 2 - pi / 2
 
 
 class MyGame(arcade.Window):
