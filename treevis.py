@@ -65,8 +65,8 @@ def generalizedPythagorasTree(H):
 
 
 def drawGPT(H, focus):
-    H.data.draw(arcade, focus[0], focus[1], focus[2],
-                focus[3], focus[4], focus[5])
+    H.data.draw(arcade, focus[0], focus[1], focus[2], focus[3], focus[4], focus[5])
+    H.data.drawbbox(arcade, focus[0], focus[1], focus[2], focus[3], focus[4], focus[5])
     if not H.children:
         return
     for n in H.children:

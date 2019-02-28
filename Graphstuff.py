@@ -41,11 +41,11 @@ class Rectangle(object):
         xs, ys = zip(*corners)
         self.bbox = (min(xs), min(ys), max(xs), max(ys))
 
-    def offsetcenter(self, dx, dy, dt, rc, zoom):
+    def offsetpoint(self, px, py, dx, dy, dt, rc, zoom):
         # print('Old values for rect (' + str(self.c[0]) + ', ' + str(self.c[1]) + ')')
         # rotate around rc
-        cx = self.c[0] - rc[0]
-        cy = self.c[1] - rc[1]
+        cx = px - rc[0]
+        cy = py - rc[1]
         newx = cx * math.cos(dt) - cy * math.sin(dt)
         newy = cx * math.sin(dt) + cy * math.cos(dt)
         # translate back and apply dx, dy
@@ -55,12 +55,19 @@ class Rectangle(object):
         newy += dy + rc[1]
         # print('New values for rect (' + str(newx) + ', ' + str(newy) + ')')
 
-        return (newx, newy)
+        return newx, newy
+
+    def drawbbox(self, arcade, dx, dy, dt, rx, ry, zoom):
+        p1 = self.offsetpoint(self.bbox[0], self.bbox[1], dx, dy, dt, (rx, ry), zoom)
+        p2 = self.offsetpoint(self.bbox[0], self.bbox[3], dx, dy, dt, (rx, ry), zoom)
+        p3 = self.offsetpoint(self.bbox[2], self.bbox[3], dx, dy, dt, (rx, ry), zoom)
+        p4 = self.offsetpoint(self.bbox[2], self.bbox[1], dx, dy, dt, (rx, ry), zoom)
+        arcade.draw_polygon_filled((p1, p2, p3, p4), color=(0, 255, 0, 100))
 
     def draw(self, arcade, dx, dy, dt, rx, ry, zoom):
         print(self.c)
         arcade.draw_rectangle_filled(
-            *self.offsetcenter(dx, dy, dt, (rx, ry), zoom),
+            *self.offsetpoint(self.c[0], self.c[1], dx, dy, dt, (rx, ry), zoom),
             self.x * zoom,
             self.y * zoom,
             color=(255, 0, 0, 100),
