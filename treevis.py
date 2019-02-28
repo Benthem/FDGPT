@@ -1,7 +1,7 @@
 import math
 import random
 
-import Graphstuff as G
+from Graphstuff import *
 import arcade
 from math import sin, cos, pi
 
@@ -17,6 +17,7 @@ def ellipseCoord(a, b, phi, r):
     x = polar * math.cos(phi) * r
     y = polar * math.sin(phi) * r
     return x, y
+
 
 def treeToList(root):
     newnodes = [root.data]
@@ -58,7 +59,7 @@ def generalizedPythagorasTree(H):
         t = computeSlopeEllipse(R.t, langle)
         c = computeCenterEllipse(R.c, R.x, R.y, R.t, a, width, height, t, e_a, e_b)
 
-        r = G.Rectangle(c, height, width, t)
+        r = Rectangle(c, height, width, t)
         n.data = r
         generalizedPythagorasTree(n)
 
@@ -72,12 +73,6 @@ def drawGPT(H, focus):
         drawGPT(n, focus)
 
 
-def translateAtAngle(x, y, angle, dx, dy):
-    x = x + dx * cos(angle) - dy * sin(angle)
-    y = y + dx * sin(angle) + dy * cos(angle)
-    return x, y
-
-
 def computeSlopeEllipse(Rt, langle):
     t = (langle * -1 - pi + Rt) % (2 * pi)
     if t > pi:
@@ -87,20 +82,20 @@ def computeSlopeEllipse(Rt, langle):
 
 def computeCenterEllipse(Rc, Rx, Ry, Rt, a, width, height, t, e_a, e_b):
     r = Ry/2
-    #print('Rx: ' + str(Rx) + ', Ry: ' + str(Ry) + ', Rt: ' + str(Rt) + ', sum(a[:-1]):' + str(sum(a[:-1])) + ', sum(a):' + str(sum(a)))
+    # print('Rx: ' + str(Rx) + ', Ry: ' + str(Ry) + ', Rt: ' + str(Rt) + ', sum(a[:-1]):' + str(sum(a[:-1])) + ', sum(a):' + str(sum(a)))
     # get top of rect
-    x, y = translateAtAngle(Rc[0], Rc[1], Rt*-1, 0, Rx/2)
+    x, y = translateAtAngle(Rc[0], Rc[1], Rt * -1, 0, Rx / 2)
     dxs, dys = ellipseCoord(e_a, e_b, sum(a[:-1]), r)
     dxe, dye = ellipseCoord(e_a, e_b, sum(a), r)
     # map to our coords
-    sx, sy = translateAtAngle(x, y, Rt*-1, dxs, dys)
-    ex, ey = translateAtAngle(x, y, Rt*-1, dxe, dye)
+    sx, sy = translateAtAngle(x, y, Rt * -1, dxs, dys)
+    ex, ey = translateAtAngle(x, y, Rt * -1, dxe, dye)
 
     # middle of 2 ellipse points
-    mx = (ex+sx)/2
-    my = (ey+sy)/2
+    mx = (ex + sx) / 2
+    my = (ey + sy) / 2
     # offset them to new center
-    fx, fy = translateAtAngle(mx, my, t*-1, 0, height/2)
+    fx, fy = translateAtAngle(mx, my, t * -1, 0, height / 2)
     # return
     return fx, fy
 
@@ -227,7 +222,7 @@ def main():
     with open(FILE, 'r') as f:
         s = f.read().split('\n')
         n = int(s.pop(0))
-        nodes = [G.Node(i) for i in range(n)]
+        nodes = [Node(i) for i in range(n)]
         root = nodes[0]
         for i in range(n):
             line = s.pop(0).split()
@@ -236,7 +231,7 @@ def main():
             for j in range(int(line.pop(0))):
                 nodes[i].addChild(nodes[int(line.pop(0))])
 
-        root.data = G.Rectangle((250, 100), 100, 100, 0)
+        root.data = Rectangle((250, 100), 100, 100, 0)
     generalizedPythagorasTree(root)
     window = MyGame(SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_TITLE, root)
     arcade.run()
