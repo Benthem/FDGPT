@@ -33,12 +33,13 @@ class Rectangle(object):
         self.y = y
         self.t = t
 
-        x1, y1 = translateAtAngle(*c, t, y / 2, x / 2)
-        x2, y2 = translateAtAngle(*c, t, -y / 2, x / 2)
-        x3, y3 = translateAtAngle(*c, t, y / 2, -x / 2)
-        x4, y4 = translateAtAngle(*c, t, -y / 2, -x / 2)
+        self.corners = [translateAtAngle(*c, t, y / 2, x / 2)]
+        self.corners += [translateAtAngle(*c, t, -y / 2, x / 2)]
+        self.corners += [translateAtAngle(*c, t, y / 2, -x / 2)]
+        self.corners += [translateAtAngle(*c, t, -y / 2, -x / 2)]
 
-        self.bbox = (min(x1, x2, x3, x4), min(y1, y2, y3, y4), max(x1, x2, x3, x4), max(y1, y2, y3, y4))
+        xs, ys = zip(*corners)
+        self.bbox = (min(xs), min(ys), max(xs), max(ys))
 
     def offsetcenter(self, dx, dy, dt, rc, zoom):
         # print('Old values for rect (' + str(self.c[0]) + ', ' + str(self.c[1]) + ')')
@@ -57,6 +58,7 @@ class Rectangle(object):
         return (newx, newy)
 
     def draw(self, arcade, dx, dy, dt, rx, ry, zoom):
+        print(self.c)
         arcade.draw_rectangle_filled(
             *self.offsetcenter(dx, dy, dt, (rx, ry), zoom),
             self.x * zoom,

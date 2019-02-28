@@ -3,29 +3,25 @@ from Graphstuff import *
 from math import sin, cos, pi
 
 
-class TreeStruct
-
-    var = 1
+class TreeStruct:
+    bbox = (-1000, -1000, 1000, 1000)
 
     ##
     # Maintain link from points to rectangle objects?
-    def __init__(self, data=[]):
-        self.data += [i for i in data]
+    def __init__(self):
+        self.index = Index(bbox=self.bbox)
 
     def addRect(self, rect):
         # compute corner points
+        index.insert(rect, rect.bbox)
+        pass
 
-
-        print(self.data)
-
-    def build(self):
-        self.built = True
-        self.tree = KDTree(self.data, metric='chebyshev')
+    def removeRect(self, rect):
+        index.remove(rect, rect.bbox)
 
     def query(self, rect):
-        if not built:
-            print('tree not built')
-            return
+        candidates = index.query(rect.bbox)
+        
         # Compute radius based on size and angle
         # Then query for points
         # Then figure out which points are actually within the query rectangle.
