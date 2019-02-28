@@ -196,14 +196,7 @@ class MyGame(arcade.Window):
 
             clicked = None
             for rect in self.nodelist:
-                # rotate locally per rect to check if it falls inside
-                nx = oldx - rect.c[0]
-                ny = oldy - rect.c[1]
-                rx = nx * cos(rect.t) - ny * sin(rect.t)
-                ry = nx * sin(rect.t) + ny * cos(rect.t)
-                rx += rect.c[0]
-                ry += rect.c[1]
-                if math.fabs(rx - rect.c[0]) < rect.y / 2 and math.fabs(ry - rect.c[1]) < rect.x / 2:
+                if rect.pointinside(oldx, oldy):
                     clicked = rect
 
             if clicked is not None:

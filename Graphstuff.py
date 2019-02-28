@@ -38,8 +38,18 @@ class Rectangle(object):
         self.corners += [translateAtAngle(*c, t, y / 2, -x / 2)]
         self.corners += [translateAtAngle(*c, t, -y / 2, -x / 2)]
 
-        xs, ys = zip(*corners)
+        xs, ys = zip(*self.corners)
         self.bbox = (min(xs), min(ys), max(xs), max(ys))
+
+    def pointinside(self, x, y):
+            # rotate locally per rect to check if it falls inside
+            nx = x - self.c[0]
+            ny = y - self.c[1]
+            rx = nx * cos(self.t) - ny * sin(self.t)
+            ry = nx * sin(self.t) + ny * cos(self.t)
+            rx += self.c[0]
+            ry += self.c[1]
+            return math.fabs(rx - self.c[0]) < self.y / 2 and math.fabs(ry - self.c[1]) < self.x / 2
 
     def offsetpoint(self, px, py, dx, dy, dt, rc, zoom):
         # print('Old values for rect (' + str(self.c[0]) + ', ' + str(self.c[1]) + ')')
@@ -65,7 +75,7 @@ class Rectangle(object):
         arcade.draw_polygon_filled((p1, p2, p3, p4), color=(0, 255, 0, 100))
 
     def draw(self, arcade, dx, dy, dt, rx, ry, zoom):
-        print(self.c)
+       #print(self.c)
         arcade.draw_rectangle_filled(
             *self.offsetpoint(self.c[0], self.c[1], dx, dy, dt, (rx, ry), zoom),
             self.x * zoom,
