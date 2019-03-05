@@ -1,6 +1,3 @@
-import math
-import random
-
 from Graphstuff import *
 import arcade
 from math import sin, cos, pi
@@ -29,6 +26,39 @@ def treeToList(root):
         return newnodes
 
 
+def getLengthAngle(e_a, e_b, previous, current, y):
+    # calculate width of child using ellipse coords
+    startx, starty = ellipseCoord(e_a, e_b, previous, y)
+    endx, endy = ellipseCoord(e_a, e_b, current, y)
+    lwidth = math.sqrt(math.pow(endx - startx, 2) + math.pow(endy - starty, 2)) / 2
+    # calculate angle of points for use in calculating the angle
+    langle = math.atan2(endy - starty, endx - startx)
+    return lwidth, langle
+
+
+def getFixedAngles(e_a, e_b, angles, weights, y, precision):
+    totalweights = sum(weights)
+    # calculate lenghts
+    for j in range(0, precision):
+        lengths = []
+        for i in range(0, len(angles)):
+            width, angle = getLengthAngle(e_a, e_b, sum(angles[:i]), sum(angles[:i+1]), y)
+            lengths.append(width)
+        # calculate errors
+        total = sum(lengths)
+        for i in range(0, len(angles)):
+            expected = weights[i] / totalweights
+            real = lengths[i] / total
+            deviation = real / expected
+            # adjust
+            angles[i] = angles[i] / deviation
+        # adjust to make sure we still have pi in total
+        overalldeviation = sum(angles) / pi
+        for i in range(0, len(angles)):
+            angles[i] = angles[i]/overalldeviation
+    return angles
+
+
 def generalizedPythagorasTree(H):
     R = H.data
     if not H.children:
@@ -39,22 +69,26 @@ def generalizedPythagorasTree(H):
     # ellipse shape for the children of this node, x²/a² + y²/b² = 1
     # you don't really wanna change a = 1 as this ensures the tree properly fits
     e_a = 1
-    e_b = 2
+    e_b = 1.5
+
+    weights = []
+    angles = []
+    for n in H.children:
+        weights.append(n.w)
+        angles.append(n.w * f)
+    originalangles = angles[:]
+    angles = getFixedAngles(e_a, e_b, angles, weights, R.y, 10)
+
     for i in range(len(H.children)):
         n = H.children[i]
-        a.append(n.w * f)
+        a.append(angles[i])
 
-        # calculate width of child using ellipse coords
-        startx, starty = ellipseCoord(e_a, e_b, sum(a[:-1]), R.y)
-        endx, endy = ellipseCoord(e_a, e_b, sum(a), R.y)
-        lwidth = math.sqrt(math.pow(endx - startx, 2) + math.pow(endy - starty, 2)) / 2
-        # calculate angle of points for use in calculating the angle
-        langle = math.atan2(endy - starty, endx - startx)
+        lwidth, langle = getLengthAngle(e_a, e_b, sum(a[:-1]), sum(a), R.y)
 
         # width (now y-coordinate) of child
         width = lwidth
         # same ratio as before for height
-        height = R.x * math.sin(a[i] / 2)
+        height = R.x * math.sin(originalangles[i] / 2)
 
         t = computeSlopeEllipse(R.t, langle)
         c = computeCenterEllipse(R.c, R.x, R.y, R.t, a, width, height, t, e_a, e_b)
@@ -66,7 +100,7 @@ def generalizedPythagorasTree(H):
 
 def drawGPT(H, focus):
     H.data.draw(arcade, focus[0], focus[1], focus[2], focus[3], focus[4], focus[5])
-    H.data.drawbbox(arcade, focus[0], focus[1], focus[2], focus[3], focus[4], focus[5])
+    #H.data.drawbbox(arcade, focus[0], focus[1], focus[2], focus[3], focus[4], focus[5])
     if not H.children:
         return
     for n in H.children:
