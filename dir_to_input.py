@@ -20,7 +20,7 @@ def createpathdict(dir):
     return filedir
 
 
-def dict_recurse(dict, id):
+def dict_recurse(dict, id, dictname):
     # weight = length of dict+1
     w = len(dict) + 1
     # leaf weight
@@ -34,7 +34,7 @@ def dict_recurse(dict, id):
         for key, value in dict.items():
             if not isinstance(value, collections.Mapping):
                 # found a leaf
-                leafoutput = str(leafw) + ' 0\n'
+                leafoutput = str(leafw) + ' 0*' + str(value) + '\n'
                 this.outputdict[this.id] = leafoutput
                 ids.append(this.id)
                 # update global id as we handle a new node
@@ -42,11 +42,11 @@ def dict_recurse(dict, id):
             else:
                 # recurse further
                 ids.append(this.id)
-                dict_recurse(value, this.id)
+                dict_recurse(value, this.id, key)
     outputstring = str(w) + ' ' + str(len(dict))
     for childid in ids:
         outputstring += ' ' + str(childid)
-    outputstring += '\n'
+    outputstring += '*' + str(dictname) + '\n'
     this.outputdict[id] = outputstring
 
 
@@ -54,10 +54,10 @@ def dict_recurse(dict, id):
 def dict_to_output(dict):
     this.id = 0
     this.outputdict = {}
-    dict_recurse(dict, this.id)
+    dict_recurse(dict, this.id, os.getcwd().split(os.sep)[-1])
     sorted_by_id = sorted(this.outputdict.items(), key=lambda kv: kv[0])
     output = []
-    output.append(str(len(sorted_by_id))+'\n')
+    output.append(str(len(sorted_by_id)) + ' 1\n')
     for line in sorted_by_id:
         output.append(line[1])
     return output

@@ -6,7 +6,7 @@ SCREEN_HEIGHT = 1000
 SCREEN_WIDTH = 1000
 SCREEN_TITLE = "500"
 
-FILE = "input/filetree.in"
+FILE = "input/course.in"
 
 
 def ellipseCoord(a, b, phi, r):
@@ -69,7 +69,7 @@ def generalizedPythagorasTree(H):
     # ellipse shape for the children of this node, x²/a² + y²/b² = 1
     # you don't really wanna change a = 1 as this ensures the tree properly fits
     e_a = 1
-    e_b = 1.5
+    e_b = 2
 
     weights = []
     angles = []
@@ -93,7 +93,7 @@ def generalizedPythagorasTree(H):
         t = computeSlopeEllipse(R.t, langle)
         c = computeCenterEllipse(R.c, R.x, R.y, R.t, a, width, height, t, e_a, e_b)
 
-        r = Rectangle(c, height, width, t)
+        r = Rectangle(c, height, width, t, n.name, R.depth + 1)
         n.data = r
         generalizedPythagorasTree(n)
 
@@ -161,6 +161,9 @@ class MyGame(arcade.Window):
         # only interpolate if we have a start/end point (and status)
         if len(self.startfocus) == 0 or len(self.endfocus) == 0 or len(self.focus) == 0:
             return
+        # we move the view
+        self.viewchanged = True
+
         for i in range(0, len(self.focus)):
             self.focus[i] += (self.endfocus[i] - self.startfocus[i]) / self.interpolationtime * dspeed
         self.interpolationcounter += 1 * dspeed
@@ -196,6 +199,14 @@ class MyGame(arcade.Window):
         self.startfocus = self.focus[:]
         self.focusstack = []
 
+        # true when mouse is moved
+        self.mousechanged = False
+        # true when view was translated
+        self.viewchanged = False
+        self.mousex = 0
+        self.mousey = 0
+        self.highlighted = None
+
     # the offset for drawing, when focused on rect
     def setfocus(self, rect):
         # zoom constant, 0.5 means 50% of screen width must be covered by focused rectangle width
@@ -209,6 +220,20 @@ class MyGame(arcade.Window):
         self.endfocus = self.setfocus(rect)
         self.interpolationcounter = 0
 
+    def translateclick(self, x, y):
+        # apply translation for focus in reverse
+        newx = x - self.focus[0] - self.focus[3]
+        newy = y - self.focus[1] - self.focus[4]
+        newx /= self.focus[5]
+        newy /= self.focus[5]
+        oldx = newx * cos(-1 * self.focus[2]) - \
+               newy * sin(-1 * self.focus[2])
+        oldy = newx * sin(-1 * self.focus[2]) + \
+               newy * cos(-1 * self.focus[2])
+        oldx += self.focus[3]
+        oldy += self.focus[4]
+        return oldx, oldy
+
     def on_mouse_press(self, x, y, button, modifiers):
         if button == arcade.MOUSE_BUTTON_RIGHT:
             if len(self.focusstack) > 0:
@@ -217,16 +242,7 @@ class MyGame(arcade.Window):
 
         if button == arcade.MOUSE_BUTTON_LEFT:
             # apply translation for focus in reverse
-            newx = x - self.focus[0] - self.focus[3]
-            newy = y - self.focus[1] - self.focus[4]
-            newx /= self.focus[5]
-            newy /= self.focus[5]
-            oldx = newx * cos(-1 * self.focus[2]) - \
-                newy * sin(-1 * self.focus[2])
-            oldy = newx * sin(-1 * self.focus[2]) + \
-                newy * cos(-1 * self.focus[2])
-            oldx += self.focus[3]
-            oldy += self.focus[4]
+            oldx, oldy = self.translateclick(x, y)
 
             clicked = None
             for rect in self.nodelist:
@@ -239,26 +255,59 @@ class MyGame(arcade.Window):
                 self.focusrect = clicked
                 self.focus_on(self.focusrect)
 
+    def on_mouse_motion(self, x, y, dx, dy):
+        self.mousex = x
+        self.mousey = y
+        self.mousechanged = True
+
+
     def on_draw(self):
+        # update highlighted element
+        if self.mousechanged or self.viewchanged:
+            self.highlighted = None
+            for rect in self.nodelist:
+                x, y = self.translateclick(self.mousex, self.mousey)
+                if rect.pointinside(x, y):
+                    self.highlighted = rect
+
         """ Called whenever we need to draw the window. """
         arcade.start_render()
         drawGPT(self.root, self.focus)
+        if self.highlighted is not None:
+            arcade.draw_text(self.highlighted.name, 50, 50, arcade.color.BLACK, 24)
+        # processed mouse/view changes, set back to false
+        self.mousechanged = False
+        self.viewchanged = False
 
 
 def main():
     with open(FILE, 'r') as f:
         s = f.read().split('\n')
-        n = int(s.pop(0))
+        first = s.pop(0).split()
+        n = int(first.pop(0))
+        # check if there are names
+        if len(first) > 0:
+            named = int(first.pop(0)) == 1
+        else:
+            named = False
+        print(named)
         nodes = [Node(i) for i in range(n)]
         root = nodes[0]
         for i in range(n):
-            line = s.pop(0).split()
+            linetosplit = s.pop(0)
+            if named:
+                split = linetosplit.split('*')
+                line = split[0].split()
+                name = split[1]
+                nodes[i].setName(name)
+            else:
+                line = linetosplit.split()
             w = line.pop(0)
             nodes[i].w = int(w)
             for j in range(int(line.pop(0))):
                 nodes[i].addChild(nodes[int(line.pop(0))])
 
-        root.data = Rectangle((250, 100), 100, 100, 0)
+        root.data = Rectangle((250, 100), 100, 100, 0, root.name, 0)
     generalizedPythagorasTree(root)
     window = MyGame(SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_TITLE, root)
     arcade.run()

@@ -2,6 +2,17 @@ import math
 from math import pi, cos, sin
 
 
+# should probably hand pick these colours, now a simple transition from R to B and B to G
+colors = []
+colortransition = 3
+# R -> B
+for i in range(0, colortransition+1):
+    colors.append((int(255 - (255/colortransition) * i), 0, int(0 + (255/colortransition) * i), 100))
+# B-> G
+for i in range(0, colortransition+1):
+    colors.append((0, int(0 + (255 / colortransition) * i), int(255 - (255 / colortransition) * i), 100))
+
+
 def translateAtAngle(x, y, angle, dx, dy):
     x = x + dx * cos(angle) - dy * sin(angle)
     y = y + dx * sin(angle) + dy * cos(angle)
@@ -14,9 +25,13 @@ class Node(object):
         self.w = weight
         self.data = data
         self.children = []
+        self.name = ''
 
     def addChild(self, child):
         self.children.append(child)
+
+    def setName(self, name):
+        self.name = name
 
     def __str__(self):
         return "i%d w%d : %s" % (self.id, self.w, [n.id for n in self.children])
@@ -27,11 +42,13 @@ class Node(object):
 
 class Rectangle(object):
 
-    def __init__(self, c, x, y, t):
+    def __init__(self, c, x, y, t, name, depth):
         self.c = c
         self.x = x
         self.y = y
         self.t = t
+        self.name = name
+        self.depth = depth
 
         self.corners = [translateAtAngle(*c, t, y / 2, x / 2)]
         self.corners += [translateAtAngle(*c, t, -y / 2, x / 2)]
@@ -79,11 +96,15 @@ class Rectangle(object):
 
     def draw(self, arcade, dx, dy, dt, rx, ry, zoom):
        #print(self.c)
-        arcade.draw_rectangle_filled(
+       if self.depth > len(colors) - 1:
+           color = colors[len(colors) - 1]
+       else:
+           color = colors[self.depth]
+       arcade.draw_rectangle_filled(
             *self.offsetpoint(self.c[0], self.c[1], dx, dy, dt, (rx, ry), zoom),
             self.x * zoom,
             self.y * zoom,
-            color=(255, 0, 0, 100),
+            color=color,
             tilt_angle=(pi / 2 - self.t + dt) * 180 / 3.141592)
 
     def __str__(self):
