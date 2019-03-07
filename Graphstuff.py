@@ -6,10 +6,10 @@ from math import pi, cos, sin
 colors = []
 colortransition = 3
 # R -> B
-for i in range(0, colortransition+1):
-    colors.append((int(255 - (255/colortransition) * i), 0, int(0 + (255/colortransition) * i), 100))
+for i in range(0, colortransition + 1):
+    colors.append((int(255 - (255 / colortransition) * i), 0, int(0 + (255/colortransition) * i), 100))
 # B-> G
-for i in range(0, colortransition+1):
+for i in range(0, colortransition + 1):
     colors.append((0, int(0 + (255 / colortransition) * i), int(255 - (255 / colortransition) * i), 100))
 
 
@@ -95,12 +95,12 @@ class Rectangle(object):
         arcade.draw_polygon_filled((p1, p2, p3, p4), color=(0, 255, 0, 100))
 
     def draw(self, arcade, dx, dy, dt, rx, ry, zoom):
-       #print(self.c)
-       if self.depth > len(colors) - 1:
-           color = colors[len(colors) - 1]
-       else:
-           color = colors[self.depth]
-       arcade.draw_rectangle_filled(
+        # print(self.c)
+        if self.depth > len(colors) - 1:
+            color = colors[len(colors) - 1]
+        else:
+            color = colors[self.depth]
+        arcade.draw_rectangle_filled(
             *self.offsetpoint(self.c[0], self.c[1], dx, dy, dt, (rx, ry), zoom),
             self.x * zoom,
             self.y * zoom,

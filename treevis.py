@@ -10,7 +10,7 @@ FILE = "input/course.in"
 
 
 def ellipseCoord(a, b, phi, r):
-    polar = (a*b)/(math.sqrt(math.pow(b * math.cos(phi), 2) + math.pow(a * math.sin(phi), 2)))
+    polar = (a * b) / (math.sqrt(math.pow(b * math.cos(phi), 2) + math.pow(a * math.sin(phi), 2)))
     x = polar * math.cos(phi) * r
     y = polar * math.sin(phi) * r
     return x, y
@@ -42,7 +42,7 @@ def getFixedAngles(e_a, e_b, angles, weights, y, precision):
     for j in range(0, precision):
         lengths = []
         for i in range(0, len(angles)):
-            width, angle = getLengthAngle(e_a, e_b, sum(angles[:i]), sum(angles[:i+1]), y)
+            width, angle = getLengthAngle(e_a, e_b, sum(angles[:i]), sum(angles[:i + 1]), y)
             lengths.append(width)
         # calculate errors
         total = sum(lengths)
@@ -55,7 +55,7 @@ def getFixedAngles(e_a, e_b, angles, weights, y, precision):
         # adjust to make sure we still have pi in total
         overalldeviation = sum(angles) / pi
         for i in range(0, len(angles)):
-            angles[i] = angles[i]/overalldeviation
+            angles[i] = angles[i] / overalldeviation
     return angles
 
 
@@ -100,7 +100,7 @@ def generalizedPythagorasTree(H):
 
 def drawGPT(H, focus):
     H.data.draw(arcade, focus[0], focus[1], focus[2], focus[3], focus[4], focus[5])
-    #H.data.drawbbox(arcade, focus[0], focus[1], focus[2], focus[3], focus[4], focus[5])
+    # H.data.drawbbox(arcade, focus[0], focus[1], focus[2], focus[3], focus[4], focus[5])
     if not H.children:
         return
     for n in H.children:
@@ -115,7 +115,7 @@ def computeSlopeEllipse(Rt, langle):
 
 
 def computeCenterEllipse(Rc, Rx, Ry, Rt, a, width, height, t, e_a, e_b):
-    r = Ry/2
+    r = Ry / 2
     # print('Rx: ' + str(Rx) + ', Ry: ' + str(Ry) + ', Rt: ' + str(Rt) + ', sum(a[:-1]):' + str(sum(a[:-1])) + ', sum(a):' + str(sum(a)))
     # get top of rect
     x, y = translateAtAngle(Rc[0], Rc[1], Rt * -1, 0, Rx / 2)
@@ -227,9 +227,9 @@ class MyGame(arcade.Window):
         newx /= self.focus[5]
         newy /= self.focus[5]
         oldx = newx * cos(-1 * self.focus[2]) - \
-               newy * sin(-1 * self.focus[2])
+            newy * sin(-1 * self.focus[2])
         oldy = newx * sin(-1 * self.focus[2]) + \
-               newy * cos(-1 * self.focus[2])
+            newy * cos(-1 * self.focus[2])
         oldx += self.focus[3]
         oldy += self.focus[4]
         return oldx, oldy
@@ -259,7 +259,6 @@ class MyGame(arcade.Window):
         self.mousex = x
         self.mousey = y
         self.mousechanged = True
-
 
     def on_draw(self):
         # update highlighted element
