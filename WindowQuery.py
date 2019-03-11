@@ -31,13 +31,6 @@ class TreeStruct:
         # TBD if we want to make the check both ways or are okay with overlaps only being detected on one end
         return [candidate for candidate in candidates if rect.overlaps(candidate) or candidate.overlaps(rect)]
 
-
-tree = TreeStruct()
-tree.addRect(Rectangle((0, 0), 2, 1, pi / 3))
-tree.addRect(Rectangle((2, 2), 2, 2, 0))
-tree.addRect(Rectangle((0, 3), 1.5, 1.5, pi / 4))
-print(tree.query(Rectangle((-1, -1), 2, 2, 0)))
-
 '''
 sklearn KDTree
 scipy.spatial.cKDTree

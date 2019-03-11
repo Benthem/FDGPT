@@ -1,4 +1,5 @@
 from Graphstuff import *
+from WindowQuery import *
 import arcade
 from math import sin, cos, pi
 
@@ -6,7 +7,7 @@ SCREEN_HEIGHT = 1000
 SCREEN_WIDTH = 1000
 SCREEN_TITLE = "500"
 
-FILE = "input/course.in"
+FILE = "input/filetree.in"
 
 
 def ellipseCoord(a, b, phi, r):
@@ -16,6 +17,7 @@ def ellipseCoord(a, b, phi, r):
     return x, y
 
 
+# unused?
 def treeToList(root):
     newnodes = [root.data]
     if not root.children:
@@ -69,7 +71,9 @@ def generalizedPythagorasTree(H):
     # ellipse shape for the children of this node, x²/a² + y²/b² = 1
     # you don't really wanna change a = 1 as this ensures the tree properly fits
     e_a = 1
-    e_b = 2
+    # b moved to node object
+    # e_b = list_2
+    e_b = H.e_b
 
     weights = []
     angles = []
@@ -93,8 +97,9 @@ def generalizedPythagorasTree(H):
         t = computeSlopeEllipse(R.t, langle)
         c = computeCenterEllipse(R.c, R.x, R.y, R.t, a, width, height, t, e_a, e_b)
 
-        r = Rectangle(c, height, width, t, n.name, R.depth + 1)
+        r = Rectangle(c, height, width, t, n.name, R.depth + 1, n)
         n.data = r
+        n.parent = H
         generalizedPythagorasTree(n)
 
 
@@ -150,6 +155,37 @@ def computeSlope(Rt, a):
     return Rt + sum(a[:-1]) + a[-1] / 2 - pi / 2
 
 
+def handle_rectangle_hit(node, hit):
+    if node.id == 0 or hit.id == 0:
+        return False
+    # if depth diff > 2
+        # just go down both paths
+        # keep list of nodes passed
+    list_1 = []
+    a = node
+    while a.id != 0:
+        list_1 += [a.parent.id]
+        a = a.parent
+
+    list_2 = []
+    b = hit
+    while b.id != 0:
+        if b.id in list_1:
+            break
+        list_2 += [b.parent.id]
+        b = b.parent
+
+    if list_1.index(b.id) < 2 or len(list_2) < 3:
+        return False
+    '''
+    print("---")
+    print(node.id, hit.id)
+    print(list_1.index(b.id))
+    print(list_1, list_2)
+    '''
+    return True
+
+
 class MyGame(arcade.Window):
     def interpolate(self, deltatime):
         # interpolate scales with fps
@@ -172,7 +208,7 @@ class MyGame(arcade.Window):
             self.focus = self.endfocus[:]
             self.startfocus = self.focus[:]
 
-    def __init__(self, width, height, title, root):
+    def __init__(self, width, height, title, root, nodes):
         # Call the parent class's init function
         super().__init__(width, height, title)
 
@@ -183,7 +219,7 @@ class MyGame(arcade.Window):
         arcade.set_background_color(arcade.color.DUTCH_WHITE)
 
         self.root = root
-        self.nodelist = treeToList(self.root)
+        self.nodelist = nodes
         print(self.nodelist)
         self.r = 0
 
@@ -194,7 +230,7 @@ class MyGame(arcade.Window):
         self.interpolationtime = 60
         self.interpolationcounter = 0
         arcade.schedule(self.interpolate, 1 / self.fps)
-        self.focusrect = self.nodelist[0]
+        self.focusrect = self.nodelist[0].data
         self.focus = self.setfocus(self.focusrect)
         self.startfocus = self.focus[:]
         self.focusstack = []
@@ -245,12 +281,17 @@ class MyGame(arcade.Window):
             oldx, oldy = self.translateclick(x, y)
 
             clicked = None
-            for rect in self.nodelist:
+            for node in self.nodelist:
+                rect = node.data
                 if rect.pointinside(oldx, oldy):
                     clicked = rect
 
             if clicked is not None:
                 # add previous to stack to go back to
+                print(clicked.node.id)
+                if clicked.node.parent != {}:
+                    print(clicked.node.parent.id)
+
                 self.focusstack.append(self.focusrect)
                 self.focusrect = clicked
                 self.focus_on(self.focusrect)
@@ -260,11 +301,30 @@ class MyGame(arcade.Window):
         self.mousey = y
         self.mousechanged = True
 
+    def on_key_press(self, key, modifiers):
+        """ Called whenever the user presses a key. """
+        if key == arcade.key.SPACE:
+            tree = TreeStruct()
+
+            # build tree
+            # TODO: handle adding/removing of rects
+            for node in self.nodelist:
+                tree.addRect(node.data)
+
+            count = 0
+            for node in self.nodelist:
+                for rect in tree.query(node.data):
+                    if handle_rectangle_hit(node, rect.node):
+                        count += 1
+            print(count)
+
     def on_draw(self):
         # update highlighted element
         if self.mousechanged or self.viewchanged:
             self.highlighted = None
-            for rect in self.nodelist:
+
+            for node in self.nodelist:
+                rect = node.data
                 x, y = self.translateclick(self.mousex, self.mousey)
                 if rect.pointinside(x, y):
                     self.highlighted = rect
@@ -273,7 +333,7 @@ class MyGame(arcade.Window):
         arcade.start_render()
         drawGPT(self.root, self.focus)
         if self.highlighted is not None:
-            arcade.draw_text(self.highlighted.name, 50, 50, arcade.color.BLACK, 24)
+            arcade.draw_text("%d: %s" % (self.highlighted.node.id, self.highlighted.node.name), 50, 50, arcade.color.BLACK, 24)
         # processed mouse/view changes, set back to false
         self.mousechanged = False
         self.viewchanged = False
@@ -306,9 +366,9 @@ def main():
             for j in range(int(line.pop(0))):
                 nodes[i].addChild(nodes[int(line.pop(0))])
 
-        root.data = Rectangle((250, 100), 100, 100, 0, root.name, 0)
+        root.data = Rectangle((250, 100), 100, 100, 0, root.name, 0, nodes[0])
     generalizedPythagorasTree(root)
-    window = MyGame(SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_TITLE, root)
+    window = MyGame(SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_TITLE, root, nodes)
     arcade.run()
 
 

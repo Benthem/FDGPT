@@ -7,7 +7,7 @@ colors = []
 colortransition = 3
 # R -> B
 for i in range(0, colortransition + 1):
-    colors.append((int(255 - (255 / colortransition) * i), 0, int(0 + (255/colortransition) * i), 100))
+    colors.append((int(255 - (255 / colortransition) * i), 0, int(0 + (255 / colortransition) * i), 100))
 # B-> G
 for i in range(0, colortransition + 1):
     colors.append((0, int(0 + (255 / colortransition) * i), int(255 - (255 / colortransition) * i), 100))
@@ -20,12 +20,14 @@ def translateAtAngle(x, y, angle, dx, dy):
 
 
 class Node(object):
-    def __init__(self, id, weight=0, data={}):
+    def __init__(self, id, weight=0, data={}, parent={}):
         self.id = id
         self.w = weight
         self.data = data
         self.children = []
+        self.parent = parent
         self.name = ''
+        self.e_b = 1.5
 
     def addChild(self, child):
         self.children.append(child)
@@ -42,13 +44,13 @@ class Node(object):
 
 class Rectangle(object):
 
-    def __init__(self, c, x, y, t, name, depth):
+    def __init__(self, c, x, y, t, name, depth, node):
         self.c = c
         self.x = x
         self.y = y
         self.t = t
-        self.name = name
         self.depth = depth
+        self.node = node
 
         self.corners = [translateAtAngle(*c, t, y / 2, x / 2)]
         self.corners += [translateAtAngle(*c, t, -y / 2, x / 2)]
