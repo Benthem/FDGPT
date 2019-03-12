@@ -27,7 +27,7 @@ class Node(object):
         self.children = []
         self.parent = parent
         self.name = ''
-        self.e_b = 1.5
+        self.e_b = 1
 
     def addChild(self, child):
         self.children.append(child)

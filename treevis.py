@@ -7,7 +7,7 @@ SCREEN_HEIGHT = 1000
 SCREEN_WIDTH = 1000
 SCREEN_TITLE = "500"
 
-FILE = "input/filetree.in"
+FILE = "input/simple.in"
 
 
 def ellipseCoord(a, b, phi, r):
@@ -216,7 +216,8 @@ class MyGame(arcade.Window):
         # So we just see our object, not the pointer.
         self.set_mouse_visible(True)
 
-        arcade.set_background_color(arcade.color.DUTCH_WHITE)
+        #arcade.set_background_color(arcade.color.DUTCH_WHITE)
+        arcade.set_background_color((255, 255, 255))
 
         self.root = root
         self.nodelist = nodes
@@ -365,7 +366,7 @@ def main():
             nodes[i].w = int(w)
             for j in range(int(line.pop(0))):
                 nodes[i].addChild(nodes[int(line.pop(0))])
-
+        #nodes[2].e_b = 0.5
         root.data = Rectangle((250, 100), 100, 100, 0, root.name, 0, nodes[0])
     generalizedPythagorasTree(root)
     window = MyGame(SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_TITLE, root, nodes)

@@ -10,13 +10,18 @@ this = sys.modules[__name__]
 def createpathdict(dir):
     if os.path.isfile(dir):
         return str(os.path.basename(dir))
-    content = os.listdir(dir)
+    try:
+        content = os.listdir(dir)
+    except PermissionError:
+        return {}
     filedir = {}
     for item in content:
         if os.path.isfile(dir + '/' + item):
             filedir[item] = item
         else:
-            filedir[item] = createpathdict(dir + '/' + item)
+            returndict = createpathdict(dir + '/' + item)
+            if len(returndict) > 0:
+                filedir[item] = returndict
     return filedir
 
 
