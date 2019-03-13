@@ -7,7 +7,7 @@ SCREEN_HEIGHT = 1000
 SCREEN_WIDTH = 1000
 SCREEN_TITLE = "500"
 
-FILE = "input/simple.in"
+FILE = "input/example.in"
 
 
 def ellipseCoord(a, b, phi, r):
