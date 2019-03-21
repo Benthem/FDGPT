@@ -7,7 +7,7 @@ SCREEN_HEIGHT = 1000
 SCREEN_WIDTH = 1000
 SCREEN_TITLE = "500"
 
-FILE = "input/example.in"
+FILE = "input/simple.in"
 
 
 def ellipseCoord(a, b, phi, r):
@@ -61,7 +61,19 @@ def getFixedAngles(e_a, e_b, angles, weights, y, precision):
     return angles
 
 
-def generalizedPythagorasTree(H):
+def generalizedPythagorasTree(H, rebuild=False, changed=False):
+    # no ancestor has changed yet, and we are rebuilding
+    if rebuild and not changed:
+        # check if this node was changed, and update cache if so
+        changed = H.nodeChanged()
+
+    # no changes still from here on, simply recurse on children
+    if rebuild and not changed:
+        for child in H.children:
+            generalizedPythagorasTree(child, rebuild, changed)
+        # then return
+        return
+
     R = H.data
     if not H.children:
         return
@@ -96,11 +108,13 @@ def generalizedPythagorasTree(H):
 
         t = computeSlopeEllipse(R.t, langle)
         c = computeCenterEllipse(R.c, R.x, R.y, R.t, a, width, height, t, e_a, e_b)
-
-        r = Rectangle(c, height, width, t, n.name, R.depth + 1, n)
-        n.data = r
+        if rebuild:
+            n.data.update(c, height, width, t)
+        else:
+            r = Rectangle(c, height, width, t, n.name, R.depth + 1, n)
+            n.data = r
         n.parent = H
-        generalizedPythagorasTree(n)
+        generalizedPythagorasTree(n, rebuild, changed)
 
 
 def drawGPT(H, focus):
@@ -318,6 +332,8 @@ class MyGame(arcade.Window):
                     if handle_rectangle_hit(node, rect.node):
                         count += 1
             print(count)
+            self.nodelist[0].e_b += 0.1
+            generalizedPythagorasTree(self.nodelist[0], True, False)
 
     def on_draw(self):
         # update highlighted element

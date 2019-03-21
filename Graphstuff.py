@@ -27,7 +27,14 @@ class Node(object):
         self.children = []
         self.parent = parent
         self.name = ''
-        self.e_b = 1
+        self.e_b = 1.0
+        self.e_b_cache = 1.0
+
+    def nodeChanged(self):
+        if self.e_b_cache != self.e_b:
+            self.e_b_cache = self.e_b
+            return True
+        return False
 
     def addChild(self, child):
         self.children.append(child)
@@ -59,6 +66,12 @@ class Rectangle(object):
 
         xs, ys = zip(*self.corners)
         self.bbox = (min(xs), min(ys), max(xs), max(ys))
+
+    def update(self, c, x, y, t):
+        self.c = c
+        self.x = x
+        self.y = y
+        self.t = t
 
     def overlaps(self, rect):
         return any([self.pointinside(*corner) for corner in rect.corners])
