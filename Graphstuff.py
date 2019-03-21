@@ -1,5 +1,6 @@
 import math
 from math import pi, cos, sin
+from EllipseStuff import translateAtAngle
 
 
 # should probably hand pick these colours, now a simple transition from R to B and B to G
@@ -11,12 +12,6 @@ for i in range(0, colortransition + 1):
 # B-> G
 for i in range(0, colortransition + 1):
     colors.append((0, int(0 + (255 / colortransition) * i), int(255 - (255 / colortransition) * i), 100))
-
-
-def translateAtAngle(x, y, angle, dx, dy):
-    x = x + dx * cos(angle) - dy * sin(angle)
-    y = y + dx * sin(angle) + dy * cos(angle)
-    return x, y
 
 
 class Node(object):
