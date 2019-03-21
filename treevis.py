@@ -17,17 +17,6 @@ def ellipseCoord(a, b, phi, r):
     return x, y
 
 
-# unused?
-def treeToList(root):
-    newnodes = [root.data]
-    if not root.children:
-        return newnodes
-    else:
-        for child in root.children:
-            newnodes.extend(treeToList(child))
-        return newnodes
-
-
 def getLengthAngle(e_a, e_b, previous, current, y):
     # calculate width of child using ellipse coords
     startx, starty = ellipseCoord(e_a, e_b, previous, y)
@@ -153,23 +142,7 @@ def computeCenterEllipse(Rc, Rx, Ry, Rt, a, width, height, t, e_a, e_b):
     return fx, fy
 
 
-def computeCenter(Rc, Rx, Ry, Rt, a, x, y):
-    ap = sum(a[:-1]) + a[-1] / 2
-    length = y / 2 + abs(cos(a[-1] / 2) * Rx / 2)
-    print(length)
-    dx = -cos(ap + Rt) * length
-    dy = sin(ap + Rt) * length
-
-    arcade.draw_circle_filled(
-        Rc[0] + sin(Rt) * Rx / 2, Rc[1] + cos(Rt) * Ry / 2, 2, arcade.color.GREEN)
-    return (Rc[0] + sin(Rt) * Rx / 2 + dx, Rc[1] + cos(Rt) * Ry / 2 + dy)
-
-
-def computeSlope(Rt, a):
-    return Rt + sum(a[:-1]) + a[-1] / 2 - pi / 2
-
-
-def handle_rectangle_hit(node, hit):
+def check_real_hit(node, hit):
     if node.id == 0 or hit.id == 0:
         return False
     # if depth diff > 2
@@ -329,11 +302,12 @@ class MyGame(arcade.Window):
             count = 0
             for node in self.nodelist:
                 for rect in tree.query(node.data):
-                    if handle_rectangle_hit(node, rect.node):
+                    if check_real_hit(node, rect.node):
                         count += 1
+                        handle_real_hit(node, rect.node)
             print(count)
-            self.nodelist[0].e_b += 0.1
-            generalizedPythagorasTree(self.nodelist[0], True, False)
+            # self.nodelist[0].e_b += 0.1
+            # generalizedPythagorasTree(self.nodelist[0], True, False)
 
     def on_draw(self):
         # update highlighted element
@@ -354,6 +328,21 @@ class MyGame(arcade.Window):
         # processed mouse/view changes, set back to false
         self.mousechanged = False
         self.viewchanged = False
+
+
+def handle_real_hit(node, hit):
+    hit_strat_one(node, hit)
+    # hit_strat_two(node, hit)
+
+
+# YOERI
+def hit_strat_one(node, hit):
+    pass
+
+
+# TOON
+def hit strat_two(node, hit):
+    pass
 
 
 def main():
