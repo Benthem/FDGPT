@@ -1,9 +1,28 @@
 import collections
 import os
 import sys
-
+from Bio import Phylo
 # module level stuff
 this = sys.modules[__name__]
+# assign weight by direct children if true, total number of descendants if false
+this.weightbydirectchildren = False
+
+
+def recurse(clade):
+    if not clade.clades:
+        return clade.name
+    phylodict = {}
+    for child in clade.clades:
+        phylodict[child.name] = recurse(child)
+    return phylodict
+
+
+def createPhylodict(filename):
+    trees = Phylo.parse(filename, 'newick')
+    a = next(trees)
+    b = next(trees)
+    phylodict = recurse(b.clade)
+    return phylodict
 
 
 # create dict of files/folders in dir (recursively)
@@ -26,8 +45,9 @@ def createpathdict(dir):
 
 
 def dict_recurse(dict, id, dictname):
-    # weight = length of dict+1
-    w = len(dict) + 1
+    directchildren = this.weightbydirectchildren
+    w = 0
+
     # leaf weight
     leafw = 1
     # update global id as we handle a new node
@@ -44,15 +64,19 @@ def dict_recurse(dict, id, dictname):
                 ids.append(this.id)
                 # update global id as we handle a new node
                 this.id += 1
+                w += leafw
             else:
                 # recurse further
                 ids.append(this.id)
-                dict_recurse(value, this.id, key)
+                w += dict_recurse(value, this.id, key)
+    if directchildren:
+        w = len(dict) + 1
     outputstring = str(w) + ' ' + str(len(dict))
     for childid in ids:
         outputstring += ' ' + str(childid)
     outputstring += '*' + str(dictname) + '\n'
     this.outputdict[id] = outputstring
+    return w
 
 
 # convert arbitrary dict to list of lines to print to output file
@@ -67,13 +91,16 @@ def dict_to_output(dict):
         output.append(line[1])
     return output
 
+
 def main():
-    output = createpathdict('.')
+    # output = createpathdict('.')
+    output = createPhylodict('ncbi-taxonomy.tre')
     outputlines = dict_to_output(output)
     # generate output from dir
     with open('filetree.in', 'w') as f:
         for line in outputlines:
             f.write(line)
+
 
 if __name__ == "__main__":
     main()
