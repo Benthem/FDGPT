@@ -8,7 +8,7 @@ SCREEN_HEIGHT = 1000
 SCREEN_WIDTH = 1000
 SCREEN_TITLE = "500"
 
-FILE = "input/simple.in"
+FILE = "input/example.in"
 
 
 def generalizedPythagorasTree(H, rebuild=False, changed=False):
@@ -262,6 +262,9 @@ class MyGame(arcade.Window):
         # processed mouse/view changes, set back to false
         self.mousechanged = False
         self.viewchanged = False
+        #print("rendered frame")
+        #image = arcade.get_image()
+        #image.save('screenshot.png', 'PNG')
 
 
 def handle_real_hit(node, hit):

@@ -46,6 +46,15 @@ class Node(object):
 
 class Rectangle(object):
 
+    def setbbox(self):
+        self.corners = [translateAtAngle(*self.c, self.t, self.y / 2, self.x / 2)]
+        self.corners += [translateAtAngle(*self.c, self.t, -self.y / 2, self.x / 2)]
+        self.corners += [translateAtAngle(*self.c, self.t, self.y / 2, -self.x / 2)]
+        self.corners += [translateAtAngle(*self.c, self.t, -self.y / 2, -self.x / 2)]
+
+        xs, ys = zip(*self.corners)
+        self.bbox = (min(xs), min(ys), max(xs), max(ys))
+
     def __init__(self, c, x, y, t, name, depth, node):
         self.c = c
         self.x = x
@@ -53,20 +62,14 @@ class Rectangle(object):
         self.t = t
         self.depth = depth
         self.node = node
-
-        self.corners = [translateAtAngle(*c, t, y / 2, x / 2)]
-        self.corners += [translateAtAngle(*c, t, -y / 2, x / 2)]
-        self.corners += [translateAtAngle(*c, t, y / 2, -x / 2)]
-        self.corners += [translateAtAngle(*c, t, -y / 2, -x / 2)]
-
-        xs, ys = zip(*self.corners)
-        self.bbox = (min(xs), min(ys), max(xs), max(ys))
+        self.setbbox()
 
     def update(self, c, x, y, t):
         self.c = c
         self.x = x
         self.y = y
         self.t = t
+        self.setbbox()
 
     def overlaps(self, rect):
         return any([self.pointinside(*corner) for corner in rect.corners])
