@@ -175,6 +175,9 @@ class MyGame(arcade.Window):
         self.focusrectoutline = (0, 0, 0, 0)
         self.focus_type = 0
 
+        # for adding to stack when translating view
+        self.changedview = False
+
     # the offset for drawing, when focused on rect
     def setfocus(self, rect):
         # zoom constant, 0.5 means 50% of screen width must be covered by focused rectangle width
@@ -198,12 +201,14 @@ class MyGame(arcade.Window):
         self.endfocus = self.setfocus_selection(rect)
         self.interpolationcounter = 0
         self.focus_type = 1
+        self.changedview = False
 
     def focus_on(self, rect):
         self.startfocus = self.focus[:]
         self.endfocus = self.setfocus(rect)
         self.interpolationcounter = 0
         self.focus_type = 0
+        self.changedview = False
 
     def translateclick(self, x, y):
         # apply translation for focus in reverse
@@ -225,6 +230,12 @@ class MyGame(arcade.Window):
                 stackelement = self.focusstack.pop()
                 self.focusrect = stackelement[0]
                 if stackelement[1] == 0:
+                    self.focus_on(self.focusrect)
+                else:
+                    self.focus_on_selection(self.focusrect)
+            # reset to current rect
+            else:
+                if self.focus_type == 0:
                     self.focus_on(self.focusrect)
                 else:
                     self.focus_on_selection(self.focusrect)
@@ -273,6 +284,13 @@ class MyGame(arcade.Window):
         self.mousechanged = True
 
 
+
+    def changed_view(self):
+        if not self.changedview:
+            self.changedview = True
+            # push current element on stack
+            self.focusstack.append((self.focusrect, self.focus_type))
+
     def on_key_press(self, key, modifiers):
         """ Called whenever the user presses a key. """
         if key == arcade.key.SPACE:
@@ -292,6 +310,55 @@ class MyGame(arcade.Window):
             print(count)
             # self.nodelist[0].e_b += 0.1
             # generalizedPythagorasTree(self.nodelist[0], True, False)
+
+        # move camera around
+        movespeed = 25
+        if key == arcade.key.W:
+            self.changed_view()
+            self.focus[1] -= movespeed
+            if len(self.endfocus) > 1:
+                self.endfocus[1] -= movespeed
+        if key == arcade.key.S:
+            self.changed_view()
+            self.focus[1] += movespeed
+            if len(self.endfocus) > 1:
+                self.endfocus[1] += movespeed
+        if key == arcade.key.A:
+            self.changed_view()
+            self.focus[0] += movespeed
+            if len(self.endfocus) > 1:
+                self.endfocus[0] += movespeed
+        if key == arcade.key.D:
+            self.changed_view()
+            self.focus[0] -= movespeed
+            if len(self.endfocus) > 1:
+                self.endfocus[0] -= movespeed
+
+        # rotate camera
+        rotation = pi/18
+        if key == arcade.key.LEFT:
+            self.changed_view()
+            self.focus[2] -= rotation
+            if len(self.endfocus) > 2:
+                self.endfocus[2] -= rotation
+        if key == arcade.key.RIGHT:
+            self.changed_view()
+            self.focus[2] += rotation
+            if len(self.endfocus) > 2:
+                self.endfocus[2] += rotation
+
+        # zoom camera
+        zoomratio = 1.1
+        if key == arcade.key.UP:
+            self.changed_view()
+            self.focus[5] *= zoomratio
+            if len(self.endfocus) > 4:
+                self.endfocus[5] *= zoomratio
+        if key == arcade.key.DOWN:
+            self.changed_view()
+            self.focus[5] /= zoomratio
+            if len(self.endfocus) > 4:
+                self.endfocus[5] /= zoomratio
 
     def set_focus_rect(self):
         rectw = self.startx - self.mousex
