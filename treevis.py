@@ -3,13 +3,15 @@ from WindowQuery import *
 from EllipseStuff import *
 import arcade
 from math import sin, cos, pi
+from hurry.filesize import size
 
-SCREEN_HEIGHT = 500
-SCREEN_WIDTH = 1000
+SCREEN_WIDTH = 1600
+SCREEN_HEIGHT = 900
 SCREEN_RATIO = SCREEN_WIDTH / SCREEN_HEIGHT
 SCREEN_TITLE = "500"
+DISPLAY_WEIGHT_AS_FILESIZE = True
 
-FILE = "input/example.in"
+FILE = "input/filetree_filesize.in"
 
 
 def generalizedPythagorasTree(H, rebuild=False, changed=False):
@@ -395,7 +397,11 @@ class MyGame(arcade.Window):
         arcade.start_render()
         drawGPT(self.root, self.focus)
         if self.highlighted is not None:
-            arcade.draw_text("%d: %s" % (self.highlighted.node.id, self.highlighted.node.name), 50, 50, arcade.color.BLACK, 24)
+            if DISPLAY_WEIGHT_AS_FILESIZE:
+                arcade.draw_text("%d: %s | size: %s" % (self.highlighted.node.id, self.highlighted.node.name, size(self.highlighted.node.w)), 50, 50, arcade.color.BLACK, 24)
+            else:
+                arcade.draw_text("%d: %s" % (self.highlighted.node.id, self.highlighted.node.name), 50, 50,
+                                 arcade.color.BLACK, 24)
 
         # draw selection box if applicable
         if self.middledown:
