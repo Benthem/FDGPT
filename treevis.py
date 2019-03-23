@@ -4,8 +4,9 @@ from EllipseStuff import *
 import arcade
 from math import sin, cos, pi
 
-SCREEN_HEIGHT = 1000
+SCREEN_HEIGHT = 500
 SCREEN_WIDTH = 1000
+SCREEN_RATIO = SCREEN_WIDTH / SCREEN_HEIGHT
 SCREEN_TITLE = "500"
 
 FILE = "input/example.in"
@@ -155,6 +156,7 @@ class MyGame(arcade.Window):
         self.focusrect = self.nodelist[0].data
         self.focus = self.setfocus(self.focusrect)
         self.startfocus = self.focus[:]
+        # stack of (focusrect, focustype) where 0 = rect, 1 = zoom (different focus functions)
         self.focusstack = []
 
         # true when mouse is moved
@@ -165,6 +167,14 @@ class MyGame(arcade.Window):
         self.mousey = 0
         self.highlighted = None
 
+
+        # for zoom selection
+        self.startx = 0
+        self.starty = 0
+        self.middledown = False
+        self.focusrectoutline = (0, 0, 0, 0)
+        self.focus_type = 0
+
     # the offset for drawing, when focused on rect
     def setfocus(self, rect):
         # zoom constant, 0.5 means 50% of screen width must be covered by focused rectangle width
@@ -173,10 +183,27 @@ class MyGame(arcade.Window):
         focus = [-rect.c[0] + SCREEN_WIDTH / 2, -rect.c[1] + SCREEN_HEIGHT / 2 - yoffset, rect.t, rect.c[0], rect.c[1], SCREEN_WIDTH / rect.y * zoomc]
         return focus
 
+    def setfocus_selection(self, rect):
+        focus = [-rect.c[0] + SCREEN_WIDTH / 2, -rect.c[1] + SCREEN_HEIGHT / 2, rect.t, rect.c[0], rect.c[1], SCREEN_WIDTH / rect.x]
+        return focus
+
+    def rect_with_focus(self, x, y, w, h, t):
+        oldx, oldy = self.translateclick(x, y)
+        rect = Rectangle((oldx, oldy), w/self.focus[5], h/self.focus[5], t + self.focus[2], '', 0, None)
+        return rect
+
+
+    def focus_on_selection(self, rect):
+        self.startfocus = self.focus[:]
+        self.endfocus = self.setfocus_selection(rect)
+        self.interpolationcounter = 0
+        self.focus_type = 1
+
     def focus_on(self, rect):
         self.startfocus = self.focus[:]
         self.endfocus = self.setfocus(rect)
         self.interpolationcounter = 0
+        self.focus_type = 0
 
     def translateclick(self, x, y):
         # apply translation for focus in reverse
@@ -195,8 +222,13 @@ class MyGame(arcade.Window):
     def on_mouse_press(self, x, y, button, modifiers):
         if button == arcade.MOUSE_BUTTON_RIGHT:
             if len(self.focusstack) > 0:
-                self.focusrect = self.focusstack.pop()
-                self.focus_on(self.focusrect)
+                stackelement = self.focusstack.pop()
+                self.focusrect = stackelement[0]
+                if stackelement[1] == 0:
+                    self.focus_on(self.focusrect)
+                else:
+                    self.focus_on_selection(self.focusrect)
+
 
         if button == arcade.MOUSE_BUTTON_LEFT:
             # apply translation for focus in reverse
@@ -214,14 +246,32 @@ class MyGame(arcade.Window):
                 if clicked.node.parent != {}:
                     print(clicked.node.parent.id)
 
-                self.focusstack.append(self.focusrect)
+                self.focusstack.append((self.focusrect, self.focus_type))
                 self.focusrect = clicked
                 self.focus_on(self.focusrect)
+
+        if button == arcade.MOUSE_BUTTON_MIDDLE:
+            self.startx = x
+            self.starty = y
+            self.middledown = True
+
+    def on_mouse_release(self, x, y, button, modifiers):
+        if button == arcade.MOUSE_BUTTON_MIDDLE:
+            self.middledown = False
+            # we want our rect to be at least 4 pixels to apply it
+            if max(math.fabs(self.startx - self.mousex), math.fabs(self.starty - self.mousey)) > 4:
+                focusrectoutline = self.rect_with_focus(*self.focusrectoutline, 0)
+                self.focusstack.append((self.focusrect, self.focus_type))
+                self.focusrect = focusrectoutline
+                self.focus_on_selection(focusrectoutline)
+
+
 
     def on_mouse_motion(self, x, y, dx, dy):
         self.mousex = x
         self.mousey = y
         self.mousechanged = True
+
 
     def on_key_press(self, key, modifiers):
         """ Called whenever the user presses a key. """
@@ -243,6 +293,26 @@ class MyGame(arcade.Window):
             # self.nodelist[0].e_b += 0.1
             # generalizedPythagorasTree(self.nodelist[0], True, False)
 
+    def set_focus_rect(self):
+        rectw = self.startx - self.mousex
+        recth = self.starty - self.mousey
+        stretch_by_height = math.fabs(rectw) < math.fabs(recth) * SCREEN_RATIO
+        if stretch_by_height:
+            sign = 1
+            if rectw < 0:
+                sign = -1
+            rectw = math.fabs(recth) * SCREEN_RATIO * sign
+        else:
+            sign = 1
+            if recth < 0:
+                sign = -1
+            recth = math.fabs(rectw) / SCREEN_RATIO * sign
+        rectx = self.startx + rectw * -1 / 2
+        recty = self.starty + recth * -1 / 2
+        rectw = math.fabs(rectw)
+        recth = math.fabs(recth)
+        self.focusrectoutline = (rectx, recty, rectw, recth)
+
     def on_draw(self):
         # update highlighted element
         if self.mousechanged or self.viewchanged:
@@ -259,6 +329,12 @@ class MyGame(arcade.Window):
         drawGPT(self.root, self.focus)
         if self.highlighted is not None:
             arcade.draw_text("%d: %s" % (self.highlighted.node.id, self.highlighted.node.name), 50, 50, arcade.color.BLACK, 24)
+
+        # draw selection box if applicable
+        if self.middledown:
+            self.set_focus_rect()
+            arcade.draw_rectangle_outline(*self.focusrectoutline, (0, 0, 0, 255), 2, 0)
+
         # processed mouse/view changes, set back to false
         self.mousechanged = False
         self.viewchanged = False
