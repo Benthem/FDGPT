@@ -3,15 +3,16 @@ from WindowQuery import *
 from EllipseStuff import *
 import arcade
 from math import sin, cos, pi
+# pip install hurry.filesize
 from hurry.filesize import size
 
-SCREEN_WIDTH = 1600
-SCREEN_HEIGHT = 900
+SCREEN_WIDTH = 1000
+SCREEN_HEIGHT = 1000
 SCREEN_RATIO = SCREEN_WIDTH / SCREEN_HEIGHT
 SCREEN_TITLE = "500"
 DISPLAY_WEIGHT_AS_FILESIZE = True
 
-FILE = "input/filetree_filesize.in"
+FILE = "input/example.in"
 
 
 def generalizedPythagorasTree(H, rebuild=False, changed=False):
@@ -72,7 +73,7 @@ def generalizedPythagorasTree(H, rebuild=False, changed=False):
 
 def drawGPT(H, focus):
     H.data.draw(arcade, focus[0], focus[1], focus[2], focus[3], focus[4], focus[5])
-    # H.data.drawbbox(arcade, focus[0], focus[1], focus[2], focus[3], focus[4], focus[5])
+    H.data.drawbbox(arcade, focus[0], focus[1], focus[2], focus[3], focus[4], focus[5])
     if not H.children:
         return
     for n in H.children:
@@ -179,6 +180,7 @@ class MyGame(arcade.Window):
 
         # for adding to stack when translating view
         self.changedview = False
+        self.a = 2
 
     # the offset for drawing, when focused on rect
     def setfocus(self, rect):
@@ -196,7 +198,6 @@ class MyGame(arcade.Window):
         oldx, oldy = self.translateclick(x, y)
         rect = Rectangle((oldx, oldy), w/self.focus[5], h/self.focus[5], t + self.focus[2], '', 0, None)
         return rect
-
 
     def focus_on_selection(self, rect):
         self.startfocus = self.focus[:]
@@ -242,7 +243,6 @@ class MyGame(arcade.Window):
                 else:
                     self.focus_on_selection(self.focusrect)
 
-
         if button == arcade.MOUSE_BUTTON_LEFT:
             # apply translation for focus in reverse
             oldx, oldy = self.translateclick(x, y)
@@ -278,14 +278,10 @@ class MyGame(arcade.Window):
                 self.focusrect = focusrectoutline
                 self.focus_on_selection(focusrectoutline)
 
-
-
     def on_mouse_motion(self, x, y, dx, dy):
         self.mousex = x
         self.mousey = y
         self.mousechanged = True
-
-
 
     def changed_view(self):
         if not self.changedview:
@@ -293,25 +289,111 @@ class MyGame(arcade.Window):
             # push current element on stack
             self.focusstack.append((self.focusrect, self.focus_type))
 
+    # return the first common ancestor, the number of layers between this ancestor and the furthest child, and which one is the furthest
+    def common_ancestor(self, node1, node2):
+        parent1 = node1.parent
+        parent2 = node2.parent
+        node1parents = {parent1}
+        node2parents = {parent2}
+        number_of = 1
+        foundcommon = parent1 == parent2
+        if foundcommon:
+            return parent1, number_of, node1
+        while True:
+            number_of += 1
+            # get parent of node 1, if we are not at root
+            if isinstance(parent1, Node):
+                parent1 = parent1.parent
+                if isinstance(parent1, Node):
+                    node1parents.add(parent1)
+                    # found first common ancestor
+                    if parent1 in node2parents:
+                        return parent1, number_of, node1
+            # haven't found common: try on other side, if we are not at root here
+            if isinstance(parent2, Node):
+                parent2 = parent2.parent
+                if isinstance(parent2, Node):
+                    node2parents.add(parent2)
+                    if parent2 in node1parents:
+                        return parent2, number_of, node2
+            if not isinstance(parent1, Node) and not isinstance(parent2, Node):
+                # root
+                return parent1, number_of, node1
+
+    def get_ith_parent(self, node, i):
+        while i > 0:
+            node = node.parent
+            i -= 1
+        return node
+
+    def force_iteration(self, a = 1):
+        # a = 'strength' of iteration
+        tree = TreeStruct()
+
+        # build tree from current nodes
+        for node in self.nodelist:
+            tree.addRect(node.data)
+
+        # get hits
+        hits = []
+        for node in self.nodelist:
+            for rect in tree.query(node.data):
+                if check_real_hit(node, rect.node):
+                    hits.append((node, rect.node))
+        if len(hits) == 0:
+            # we are done
+            print("No collisions!")
+            return True
+        print("Number of collisions = ", len(hits))
+
+        # find nodes to modify, set their modification
+        n_threshold = 5
+        max_b = 3
+        min_b = 0.1
+        mark_to_increase = set()
+        mark_to_decrease = set()
+        for hit in hits:
+            # find common ancestor
+            ancestor, length, furthest_child = self.common_ancestor(hit[0], hit[1])
+            # if too far, mark a node in the middle of the path from the furthest to decrease
+            if length > n_threshold or ancestor.e_b >= max_b:
+                single_ancestor = self.get_ith_parent(furthest_child, min(length/2, n_threshold))
+                if single_ancestor.e_b > min_b:
+                    mark_to_decrease.add(single_ancestor)
+            else:
+                # if not, mark to increase b
+                mark_to_increase.add(ancestor)
+
+        # set forces
+        increaseforce = 0.2 * a
+        decreaseforce = -0.2 * a
+
+        forces = [1] * len(self.nodelist)
+        for node in mark_to_decrease:
+            forces[node.id] += decreaseforce
+        for node in mark_to_increase:
+            forces[node.id] += increaseforce
+
+        # apply forces
+        resetpower = math.pow(0.95, a)
+        for i in range(0, len(self.nodelist)):
+            self.nodelist[i].e_b *= forces[i]
+            # go towards resting state, e_b = 1
+            self.nodelist[i].e_b = math.pow(self.nodelist[i].e_b, resetpower)
+
+        # redraw tree
+        generalizedPythagorasTree(self.nodelist[0], True, False)
+        return False
+
+
     def on_key_press(self, key, modifiers):
         """ Called whenever the user presses a key. """
         if key == arcade.key.SPACE:
-            tree = TreeStruct()
+            for i in range(0, 50):
+                if self.force_iteration(max(0.2, self.a)):
+                    break
+            self.a -= 0.2
 
-            # build tree
-            # TODO: handle adding/removing of rects
-            for node in self.nodelist:
-                tree.addRect(node.data)
-
-            count = 0
-            for node in self.nodelist:
-                for rect in tree.query(node.data):
-                    if check_real_hit(node, rect.node):
-                        count += 1
-                        handle_real_hit(node, rect.node)
-            print(count)
-            # self.nodelist[0].e_b += 0.1
-            # generalizedPythagorasTree(self.nodelist[0], True, False)
 
         # move camera around
         movespeed = 25
