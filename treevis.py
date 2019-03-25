@@ -73,7 +73,7 @@ def generalizedPythagorasTree(H, rebuild=False, changed=False):
 
 def drawGPT(H, focus):
     H.data.draw(arcade, focus[0], focus[1], focus[2], focus[3], focus[4], focus[5])
-    H.data.drawbbox(arcade, focus[0], focus[1], focus[2], focus[3], focus[4], focus[5])
+    # H.data.drawbbox(arcade, focus[0], focus[1], focus[2], focus[3], focus[4], focus[5])
     if not H.children:
         return
     for n in H.children:
@@ -81,6 +81,14 @@ def drawGPT(H, focus):
 
 
 def check_real_hit(node, hit):
+    if node.id == hit.parent.id:
+        return False
+    if hit.id == node.parent.id:
+        return False
+    if hit.parent.id == node.parent.id:
+        return False
+    return True
+    """
     if node.id == 0 or hit.id == 0:
         return False
     # if depth diff > 2
@@ -109,6 +117,7 @@ def check_real_hit(node, hit):
     print(list_1, list_2)
     '''
     return True
+    """
 
 
 class MyGame(arcade.Window):
@@ -141,7 +150,7 @@ class MyGame(arcade.Window):
         # So we just see our object, not the pointer.
         self.set_mouse_visible(True)
 
-        #arcade.set_background_color(arcade.color.DUTCH_WHITE)
+        # arcade.set_background_color(arcade.color.DUTCH_WHITE)
         arcade.set_background_color((255, 255, 255))
 
         self.root = root
@@ -169,7 +178,6 @@ class MyGame(arcade.Window):
         self.mousex = 0
         self.mousey = 0
         self.highlighted = None
-
 
         # for zoom selection
         self.startx = 0
@@ -334,6 +342,24 @@ class MyGame(arcade.Window):
         for node in self.nodelist:
             tree.addRect(node.data)
 
+            count = 0
+            for node in self.nodelist:
+                for rect in tree.query(node.data):
+                    if check_real_hit(node, rect.node):
+                        count += 1
+                        handle_real_hit(node, rect.node)
+            print(count)
+
+            for node in self.nodelist:
+                if node.strat_two.get('common', 0) > node.strat_two.get('path', 0):
+                    node.e_b = min(1.1 * node.e_b, 2)
+                elif node.strat_two.get('common', 0) < node.strat_two.get('path', 0):
+                    node.e_b *= 0.9
+                node.e_b += (1 - node.e_b) * 0.05
+                node.strat_two['common'] = 0
+                node.strat_two['path'] = 0
+            # self.nodelist[0].e_b += 0.1
+            generalizedPythagorasTree(self.nodelist[0], True, False)
         # get hits
         hits = []
         for node in self.nodelist:
@@ -510,7 +536,29 @@ def hit_strat_one(node, hit):
 
 # TOON
 def hit_strat_two(node, hit):
-    pass
+    list_1 = []
+    a = node
+    while a.parent is not None:
+        list_1 += [a.parent]
+        a = a.parent
+
+    list_2 = []
+    b = hit
+    while b is not None:
+        if b.id in [n.id for n in list_1]:
+            b.strat_two['common'] = b.strat_two.get('common', 0) + 1
+            break
+        list_2 += [b.parent]
+        b = b.parent
+
+    # mark nodes
+    for node in list_2[:-1]:
+        node.strat_two['path'] = node.strat_two.get('path', 0) + 1
+
+    for node in list_1:
+        if node.id == b.id:
+            break
+        node.strat_two['path'] = node.strat_two.get('path', 0) + 1
 
 
 def main():
@@ -526,6 +574,8 @@ def main():
         print(named)
         nodes = [Node(i) for i in range(n)]
         root = nodes[0]
+        mock = Node(-1)
+        root.parent = mock
         for i in range(n):
             linetosplit = s.pop(0)
             if named:
@@ -539,7 +589,7 @@ def main():
             nodes[i].w = int(w)
             for j in range(int(line.pop(0))):
                 nodes[i].addChild(nodes[int(line.pop(0))])
-        #nodes[2].e_b = 0.5
+        # nodes[2].e_b = 0.5
         root.data = Rectangle((250, 100), 100, 100, 0, root.name, 0, nodes[0])
     generalizedPythagorasTree(root)
     window = MyGame(SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_TITLE, root, nodes)

@@ -15,7 +15,7 @@ for i in range(0, colortransition + 1):
 
 
 class Node(object):
-    def __init__(self, id, weight=0, data={}, parent={}):
+    def __init__(self, id, weight=0, data={}, parent=None):
         self.id = id
         self.w = weight
         self.data = data
@@ -24,6 +24,9 @@ class Node(object):
         self.name = ''
         self.e_b = 1.0
         self.e_b_cache = 1.0
+
+        self.strat_one = {}
+        self.strat_two = {}
 
     def nodeChanged(self):
         if self.e_b_cache != self.e_b:
@@ -46,15 +49,6 @@ class Node(object):
 
 class Rectangle(object):
 
-    def setbbox(self):
-        self.corners = [translateAtAngle(*self.c, self.t, self.y / 2, self.x / 2)]
-        self.corners += [translateAtAngle(*self.c, self.t, -self.y / 2, self.x / 2)]
-        self.corners += [translateAtAngle(*self.c, self.t, self.y / 2, -self.x / 2)]
-        self.corners += [translateAtAngle(*self.c, self.t, -self.y / 2, -self.x / 2)]
-
-        xs, ys = zip(*self.corners)
-        self.bbox = (min(xs), min(ys), max(xs), max(ys))
-
     def __init__(self, c, x, y, t, name, depth, node):
         self.c = c
         self.x = x
@@ -71,7 +65,18 @@ class Rectangle(object):
         self.t = t
         self.setbbox()
 
+    def setbbox(self):
+        self.corners = [translateAtAngle(*self.c, -self.t, self.y / 2, self.x / 2)]
+        self.corners += [translateAtAngle(*self.c, -self.t, -self.y / 2, self.x / 2)]
+        self.corners += [translateAtAngle(*self.c, -self.t, self.y / 2, -self.x / 2)]
+        self.corners += [translateAtAngle(*self.c, -self.t, -self.y / 2, -self.x / 2)]
+
+        xs, ys = zip(*self.corners)
+        self.bbox = (min(xs), min(ys), max(xs), max(ys))
+
     def overlaps(self, rect):
+        if self.node.id == 70:
+            print(rect, rect.corners)
         return any([self.pointinside(*corner) for corner in rect.corners])
 
     def pointinside(self, x, y):
@@ -121,7 +126,7 @@ class Rectangle(object):
             tilt_angle=(pi / 2 - self.t + dt) * 180 / 3.141592)
 
     def __str__(self):
-        return "c%d,%d x%d y%d t%f" % (*self.c, self.x, self.y, self.t)
+        return "%d:\tc%d,%d x%d y%d t%f" % (self.node.id, *self.c, self.x, self.y, self.t)
 
     def __repr__(self):
         return "%s" % self
