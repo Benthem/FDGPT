@@ -1,5 +1,6 @@
 from math import sin, cos, pi, sqrt, pow, atan2
 
+
 def computeSlopeEllipse(Rt, langle):
     t = (langle * -1 - pi + Rt) % (2 * pi)
     if t > pi:
@@ -38,7 +39,7 @@ def translateAtAngle(x, y, angle, dx, dy):
     x = x + dx * cos(angle) - dy * sin(angle)
     y = y + dx * sin(angle) + dy * cos(angle)
     return x, y
-    
+
 
 def getLengthAngle(e_a, e_b, previous, current, y):
     # calculate width of child using ellipse coords

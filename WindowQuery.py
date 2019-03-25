@@ -28,6 +28,10 @@ class TreeStruct:
 
     def query(self, rect):
         candidates = self.index.intersect(rect.bbox)
+        if rect.node.id == 70:
+            print("#####")
+            print([c.node.id for c in candidates])
+        # return candidates
         # TBD if we want to make the check both ways or are okay with overlaps only being detected on one end
         return [candidate for candidate in candidates if rect.overlaps(candidate) or candidate.overlaps(rect)]
 
