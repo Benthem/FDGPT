@@ -11,6 +11,7 @@ SCREEN_HEIGHT = 1000
 SCREEN_RATIO = SCREEN_WIDTH / SCREEN_HEIGHT
 SCREEN_TITLE = "500"
 DISPLAY_WEIGHT_AS_FILESIZE = True
+STRATEGY = 0 # 0 = Yoeri, 1 = Toon
 
 FILE = "input/example.in"
 
@@ -189,6 +190,8 @@ class MyGame(arcade.Window):
         # for adding to stack when translating view
         self.changedview = False
         self.a = 2
+        self.bestvalue = math.inf
+        self.best = [1] * len(self.nodelist)
 
     # the offset for drawing, when focused on rect
     def setfocus(self, rect):
@@ -334,7 +337,43 @@ class MyGame(arcade.Window):
             i -= 1
         return node
 
-    def force_iteration(self, a = 1):
+
+    def force_iteration_strategy_1(self):
+        tree = TreeStruct()
+
+        # build tree
+        # TODO: handle adding/removing of rects
+        for node in self.nodelist:
+            tree.addRect(node.data)
+
+        count = 0
+        for node in self.nodelist:
+            for rect in tree.query(node.data):
+                if check_real_hit(node, rect.node):
+                    count += 1
+                    handle_real_hit(node, rect.node)
+        print(count)
+
+        for node in self.nodelist:
+            if node.strat_two.get('common', 0) > node.strat_two.get('path', 0):
+                node.e_b = min(1.1 * node.e_b, 2)
+            elif node.strat_two.get('common', 0) < node.strat_two.get('path', 0):
+                node.e_b *= 0.9
+            node.e_b += (1 - node.e_b) * 0.05
+            node.strat_two['common'] = 0
+            node.strat_two['path'] = 0
+        # self.nodelist[0].e_b += 0.1
+        generalizedPythagorasTree(self.nodelist[0], True, False)
+
+
+    def set_best(self):
+        # setting best
+        print("Setting to best configuration, " + str(self.bestvalue) + " hits")
+        for i in range(0, len(self.nodelist)):
+            self.nodelist[i].e_b = self.best[i]
+        generalizedPythagorasTree(self.nodelist[0], True, False)
+
+    def force_iteration_strategy_0(self, a = 1):
         # a = 'strength' of iteration
         tree = TreeStruct()
 
@@ -342,24 +381,6 @@ class MyGame(arcade.Window):
         for node in self.nodelist:
             tree.addRect(node.data)
 
-            count = 0
-            for node in self.nodelist:
-                for rect in tree.query(node.data):
-                    if check_real_hit(node, rect.node):
-                        count += 1
-                        handle_real_hit(node, rect.node)
-            print(count)
-
-            for node in self.nodelist:
-                if node.strat_two.get('common', 0) > node.strat_two.get('path', 0):
-                    node.e_b = min(1.1 * node.e_b, 2)
-                elif node.strat_two.get('common', 0) < node.strat_two.get('path', 0):
-                    node.e_b *= 0.9
-                node.e_b += (1 - node.e_b) * 0.05
-                node.strat_two['common'] = 0
-                node.strat_two['path'] = 0
-            # self.nodelist[0].e_b += 0.1
-            generalizedPythagorasTree(self.nodelist[0], True, False)
         # get hits
         hits = []
         for node in self.nodelist:
@@ -371,6 +392,10 @@ class MyGame(arcade.Window):
             print("No collisions!")
             return True
         print("Number of collisions = ", len(hits))
+        if len(hits) < self.bestvalue:
+            self.bestvalue = len(hits)
+            for i in range(0, len(self.nodelist)):
+                self.best[i] = self.nodelist[i].e_b
 
         # find nodes to modify, set their modification
         n_threshold = 5
@@ -415,10 +440,18 @@ class MyGame(arcade.Window):
     def on_key_press(self, key, modifiers):
         """ Called whenever the user presses a key. """
         if key == arcade.key.SPACE:
-            for i in range(0, 50):
-                if self.force_iteration(max(0.2, self.a)):
-                    break
-            self.a -= 0.2
+            if STRATEGY == 0:
+                for i in range(0, 50):
+                    if self.force_iteration_strategy_0(max(0.2, self.a)):
+                        break
+                self.a -= 0.2
+            else:
+                self.force_iteration_strategy_1()
+        if key == arcade.key.LSHIFT:
+            if self.bestvalue < math.inf:
+                self.set_best()
+            else:
+                print("No best found")
 
 
         # move camera around
@@ -525,8 +558,8 @@ class MyGame(arcade.Window):
 
 
 def handle_real_hit(node, hit):
-    hit_strat_one(node, hit)
-    # hit_strat_two(node, hit)
+    # hit_strat_one(node, hit)
+    hit_strat_two(node, hit)
 
 
 # YOERI
