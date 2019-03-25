@@ -4,8 +4,11 @@ import sys
 from Bio import Phylo
 # module level stuff
 this = sys.modules[__name__]
-# assign weight by direct children if true, total number of descendants if false
+# assign weight by direct children if true, total number of descendants (or sum of element values if given) otherwise
 this.weightbydirectchildren = False
+
+# generate pathdict by storing filesize
+this.usefilesize = True
 
 
 def recurse(clade):
@@ -25,10 +28,17 @@ def createPhylodict(filename):
     return phylodict
 
 
+def handlefile(file):
+    if this.usefilesize:
+        tuple = (str(os.path.basename(file)), max(1, int(os.path.getsize(file))))
+        return tuple
+    else:
+        return str(os.path.basename(file))
+
 # create dict of files/folders in dir (recursively)
 def createpathdict(dir):
     if os.path.isfile(dir):
-        return str(os.path.basename(dir))
+        return handlefile(dir)
     try:
         content = os.listdir(dir)
     except PermissionError:
@@ -36,7 +46,7 @@ def createpathdict(dir):
     filedir = {}
     for item in content:
         if os.path.isfile(dir + '/' + item):
-            filedir[item] = item
+            filedir[item] = handlefile(dir + '/' + item)
         else:
             returndict = createpathdict(dir + '/' + item)
             if len(returndict) > 0:
@@ -46,6 +56,7 @@ def createpathdict(dir):
 
 def dict_recurse(dict, id, dictname):
     directchildren = this.weightbydirectchildren
+
     w = 0
 
     # leaf weight
@@ -58,13 +69,20 @@ def dict_recurse(dict, id, dictname):
     if len(dict) > 0:
         for key, value in dict.items():
             if not isinstance(value, collections.Mapping):
+                istuple = isinstance(value, tuple)
                 # found a leaf
-                leafoutput = str(leafw) + ' 0*' + str(value) + '\n'
+                if istuple:
+                    leafoutput = str(value[1]) + ' 0*' + str(value[0]) + '\n'
+                else:
+                    leafoutput = str(leafw) + ' 0*' + str(value) + '\n'
                 this.outputdict[this.id] = leafoutput
                 ids.append(this.id)
                 # update global id as we handle a new node
                 this.id += 1
-                w += leafw
+                if istuple:
+                    w += value[1]
+                else:
+                    w += leafw
             else:
                 # recurse further
                 ids.append(this.id)
@@ -93,8 +111,8 @@ def dict_to_output(dict):
 
 
 def main():
-    # output = createpathdict('.')
-    output = createPhylodict('ncbi-taxonomy.tre')
+    output = createpathdict('.')
+    # output = createPhylodict('ncbi-taxonomy.tre')
     outputlines = dict_to_output(output)
     # generate output from dir
     with open('filetree.in', 'w') as f:
