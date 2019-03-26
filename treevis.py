@@ -13,7 +13,7 @@ SCREEN_TITLE = "500"
 DISPLAY_WEIGHT_AS_FILESIZE = True
 STRATEGY = 1  # 0 = Yoeri, 1 = Toon
 
-FILE = "input/binary.in"
+FILE = "input/filetree.in"
 
 
 def generalizedPythagorasTree(H, rebuild=False, changed=False):
@@ -60,6 +60,7 @@ def generalizedPythagorasTree(H, rebuild=False, changed=False):
         width = lwidth
         # same ratio as before for height
         height = R.x * math.sin(originalangles[i] / 2)
+        height = min(height, width)
 
         t = computeSlopeEllipse(R.t, langle)
         c = computeCenterEllipse(R.c, R.x, R.y, R.t, a, width, height, t, e_a, e_b)
@@ -89,36 +90,6 @@ def check_real_hit(node, hit):
     if hit.parent.id == node.parent.id:
         return False
     return True
-    """
-    if node.id == 0 or hit.id == 0:
-        return False
-    # if depth diff > 2
-        # just go down both paths
-        # keep list of nodes passed
-    list_1 = []
-    a = node
-    while a.id != 0:
-        list_1 += [a.parent.id]
-        a = a.parent
-
-    list_2 = []
-    b = hit
-    while b.id != 0:
-        if b.id in list_1:
-            break
-        list_2 += [b.parent.id]
-        b = b.parent
-
-    if list_1.index(b.id) < 2 or len(list_2) < 3:
-        return False
-    '''
-    print("---")
-    print(node.id, hit.id)
-    print(list_1.index(b.id))
-    print(list_1, list_2)
-    '''
-    return True
-    """
 
 
 class MyGame(arcade.Window):
@@ -146,6 +117,7 @@ class MyGame(arcade.Window):
     def __init__(self, width, height, title, root, nodes):
         # Call the parent class's init function
         super().__init__(width, height, title)
+        self.fps = 60
 
         # Make the mouse disappear when it is over the window.
         # So we just see our object, not the pointer.
@@ -159,10 +131,14 @@ class MyGame(arcade.Window):
         # print(self.nodelist)
         self.r = 0
 
+        # STRAT STUFF
+        if STRATEGY == 1:
+            arcade.schedule(self.force_iteration_strategy_1, 0.05)
+        self.i = 0
+
         self.startfocus = []
         self.endfocus = []
         self.focus = []
-        self.fps = 60
         self.interpolationtime = 60
         self.interpolationcounter = 0
         arcade.schedule(self.interpolate, 1 / self.fps)
@@ -337,9 +313,7 @@ class MyGame(arcade.Window):
             i -= 1
         return node
 
-    ##
-    # TOON STRAT
-    def force_iteration_strategy_1(self):
+    def count_hits(self, handle=False):
         tree = TreeStruct()
 
         # build tree
@@ -352,20 +326,35 @@ class MyGame(arcade.Window):
             for rect in tree.query(node.data):
                 if check_real_hit(node, rect.node):
                     count += 1
-                    handle_real_hit(node, rect.node)
-        print(count)
-        self.update_best(count)
+                    if handle:
+                        handle_real_hit(node, rect.node)
+        return count
 
+    ##
+    # TOON STRAT
+    def force_iteration_strategy_1(self, dt):
+        if self.i == 0:
+            return
+        before = self.count_hits(True)
+        print("it: %d\t%d collissions" % (self.i, before))
+        if before == 0:
+            return
         for node in self.nodelist:
             if node.strat_two.get('common', 0) > node.strat_two.get('path', 0):
                 node.e_b = min(1.1 * node.e_b, 3)
             elif node.strat_two.get('common', 0) < node.strat_two.get('path', 0):
                 node.e_b *= 0.9
-            node.e_b += (1 - node.e_b) * 0.005
+            node.e_b += (1 - node.e_b) * node.strat_two.get('LR', 0.5)
+            node.strat_two['LR'] = node.strat_two.get('LR', 0.5) * 0.9
             node.strat_two['common'] = 0
             node.strat_two['path'] = 0
         # self.nodelist[0].e_b += 0.1
         generalizedPythagorasTree(self.nodelist[0], True, False)
+        after = self.count_hits()
+        self.update_best(after)
+        self.i -= 1
+        if after == 0:
+            self.i = 0
 
     def set_best(self):
         # setting best
@@ -449,7 +438,7 @@ class MyGame(arcade.Window):
                         break
                 self.a -= 0.2
             else:
-                self.force_iteration_strategy_1()
+                self.i = 50
         if key == arcade.key.LSHIFT:
             if self.bestvalue < math.inf:
                 self.set_best()
