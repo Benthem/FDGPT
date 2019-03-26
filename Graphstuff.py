@@ -15,7 +15,7 @@ for i in range(0, colortransition + 1):
 
 
 class Node(object):
-    def __init__(self, id, weight=0, data={}, parent=None):
+    def __init__(self, id, weight=0, data=None, parent=None):
         self.id = id
         self.w = weight
         self.data = data

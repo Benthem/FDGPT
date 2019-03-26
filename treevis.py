@@ -1,7 +1,11 @@
+import os
+
 from Graphstuff import *
 from WindowQuery import *
 from EllipseStuff import *
 import arcade
+import pickle
+import codecs
 from math import sin, cos, pi
 # pip install hurry.filesize
 from hurry.filesize import size
@@ -12,8 +16,11 @@ SCREEN_RATIO = SCREEN_WIDTH / SCREEN_HEIGHT
 SCREEN_TITLE = "500"
 DISPLAY_WEIGHT_AS_FILESIZE = True
 STRATEGY = 1  # 0 = Yoeri, 1 = Toon
+ROOTID = 243048
+MAX_B = (1 + math.sqrt(5)) / 2
 
-FILE = "input/filetree.in"
+FILE = "input/taxonomy.in"
+BESTFILE = FILE[:-3] + "_" + str(ROOTID) + ".pickle"
 
 
 def generalizedPythagorasTree(H, rebuild=False, changed=False):
@@ -142,7 +149,7 @@ class MyGame(arcade.Window):
         self.interpolationtime = 60
         self.interpolationcounter = 0
         arcade.schedule(self.interpolate, 1 / self.fps)
-        self.focusrect = self.nodelist[0].data
+        self.focusrect = self.nodelist[ROOTID].data
         self.focus = self.setfocus(self.focusrect)
         self.startfocus = self.focus[:]
         # stack of (focusrect, focustype) where 0 = rect, 1 = zoom (different focus functions)
@@ -338,36 +345,43 @@ class MyGame(arcade.Window):
         before = self.count_hits(True)
         print("it: %d\t%d collissions" % (self.i, before))
         if before == 0:
+            self.i = 0
+            print("No more collisions!")
             return
         for node in self.nodelist:
             if node.strat_two.get('common', 0) > node.strat_two.get('path', 0):
-                node.e_b = min(1.1 * node.e_b, 3)
+                node.e_b = min(1.1 * node.e_b, MAX_B)
             elif node.strat_two.get('common', 0) < node.strat_two.get('path', 0):
                 node.e_b *= 0.9
             node.e_b += (1 - node.e_b) * node.strat_two.get('LR', 0.5)
             node.strat_two['LR'] = node.strat_two.get('LR', 0.5) * 0.9
             node.strat_two['common'] = 0
             node.strat_two['path'] = 0
-        # self.nodelist[0].e_b += 0.1
-        generalizedPythagorasTree(self.nodelist[0], True, False)
+        # self.nodelist[ROOTID].e_b += 0.1
+        generalizedPythagorasTree(self.nodelist[ROOTID], True, False)
         after = self.count_hits()
         self.update_best(after)
         self.i -= 1
         if after == 0:
             self.i = 0
+            print("No more collisions!")
 
-    def set_best(self):
-        # setting best
-        print("Setting to best configuration, " + str(self.bestvalue) + " hits")
+    def set_best(self, recount=False):
         for i in range(0, len(self.nodelist)):
             self.nodelist[i].e_b = self.best[i]
-        generalizedPythagorasTree(self.nodelist[0], True, False)
+        generalizedPythagorasTree(self.nodelist[ROOTID], True, False)
+        # setting best
+        if recount:
+            self.bestvalue = self.count_hits()
+        print("Set to best configuration, " + str(self.bestvalue) + " hits")
 
     def update_best(self, hits):
         if hits < self.bestvalue:
             self.bestvalue = hits
             for i in range(0, len(self.nodelist)):
                 self.best[i] = self.nodelist[i].e_b
+            with open(BESTFILE, "wb") as f:
+                pickle.dump(self.best, f)
 
     def force_iteration_strategy_0(self, a=1):
         # a = 'strength' of iteration
@@ -426,7 +440,7 @@ class MyGame(arcade.Window):
             self.nodelist[i].e_b = math.pow(self.nodelist[i].e_b, resetpower)
 
         # redraw tree
-        generalizedPythagorasTree(self.nodelist[0], True, False)
+        generalizedPythagorasTree(self.nodelist[ROOTID], True, False)
         return False
 
     def on_key_press(self, key, modifiers):
@@ -444,6 +458,16 @@ class MyGame(arcade.Window):
                 self.set_best()
             else:
                 print("No best found")
+        if key == arcade.key.LCTRL:
+            if os.path.isfile(BESTFILE):
+                with open(BESTFILE, "rb") as f:
+                    self.best = pickle.load(f)
+                self.bestvalue = self.count_hits()
+                self.set_best(True)
+            else:
+                print("No stored configuration found")
+
+
 
         # move camera around
         movespeed = 25
@@ -586,6 +610,7 @@ def hit_strat_two(node, hit):
 
 
 def main():
+    global ROOTID
     with open(FILE, 'r') as f:
         s = f.read().split('\n')
         first = s.pop(0).split()
@@ -597,7 +622,7 @@ def main():
             named = False
         # print(named)
         nodes = [Node(i) for i in range(n)]
-        root = nodes[0]
+        root = nodes[ROOTID]
         mock = Node(-1)
         root.parent = mock
         for i in range(n):
@@ -614,9 +639,19 @@ def main():
             for j in range(int(line.pop(0))):
                 nodes[i].addChild(nodes[int(line.pop(0))])
         # nodes[2].e_b = 0.5
-        root.data = Rectangle((250, 100), 100, 100, 0, root.name, 0, nodes[0])
+        root.data = Rectangle((250, 100), 100, 100, 0, root.name, 0, nodes[ROOTID])
+    print("Total nodes:", len(nodes))
+    print("Generating tree")
     generalizedPythagorasTree(root)
-    window = MyGame(SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_TITLE, root, nodes)
+    toDelete = set()
+    print("Finding nodes to keep")
+    newnodes = []
+    for node in nodes:
+        if node.data is not None:
+            newnodes.append(node)
+    print("Total nodes:", len(newnodes))
+    ROOTID = newnodes.index(root)
+    window = MyGame(SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_TITLE, root, newnodes)
     arcade.run()
 
 
