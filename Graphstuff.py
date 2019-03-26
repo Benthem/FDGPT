@@ -75,8 +75,6 @@ class Rectangle(object):
         self.bbox = (min(xs), min(ys), max(xs), max(ys))
 
     def overlaps(self, rect):
-        if self.node.id == 70:
-            print(rect, rect.corners)
         return any([self.pointinside(*corner) for corner in rect.corners])
 
     def pointinside(self, x, y):

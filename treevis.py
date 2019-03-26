@@ -11,13 +11,13 @@ SCREEN_HEIGHT = 1000
 SCREEN_RATIO = SCREEN_WIDTH / SCREEN_HEIGHT
 SCREEN_TITLE = "500"
 DISPLAY_WEIGHT_AS_FILESIZE = True
-STRATEGY = 0 # 0 = Yoeri, 1 = Toon
+STRATEGY = 1  # 0 = Yoeri, 1 = Toon
 
-FILE = "input/example.in"
+FILE = "input/binary.in"
 
 
 def generalizedPythagorasTree(H, rebuild=False, changed=False):
-    # no ancestor has changed yet, and we are rebuilding
+    # no ancestor has changed yet, and we are rebuilding    
     if rebuild and not changed:
         # check if this node was changed, and update cache if so
         changed = H.nodeChanged()
@@ -156,7 +156,7 @@ class MyGame(arcade.Window):
 
         self.root = root
         self.nodelist = nodes
-        print(self.nodelist)
+        # print(self.nodelist)
         self.r = 0
 
         self.startfocus = []
@@ -207,7 +207,7 @@ class MyGame(arcade.Window):
 
     def rect_with_focus(self, x, y, w, h, t):
         oldx, oldy = self.translateclick(x, y)
-        rect = Rectangle((oldx, oldy), w/self.focus[5], h/self.focus[5], t + self.focus[2], '', 0, None)
+        rect = Rectangle((oldx, oldy), w / self.focus[5], h / self.focus[5], t + self.focus[2], '', 0, None)
         return rect
 
     def focus_on_selection(self, rect):
@@ -337,7 +337,8 @@ class MyGame(arcade.Window):
             i -= 1
         return node
 
-
+    ##
+    # TOON STRAT
     def force_iteration_strategy_1(self):
         tree = TreeStruct()
 
@@ -356,15 +357,14 @@ class MyGame(arcade.Window):
 
         for node in self.nodelist:
             if node.strat_two.get('common', 0) > node.strat_two.get('path', 0):
-                node.e_b = min(1.1 * node.e_b, 2)
+                node.e_b = min(1.1 * node.e_b, 3)
             elif node.strat_two.get('common', 0) < node.strat_two.get('path', 0):
                 node.e_b *= 0.9
-            node.e_b += (1 - node.e_b) * 0.05
+            node.e_b += (1 - node.e_b) * 0.005
             node.strat_two['common'] = 0
             node.strat_two['path'] = 0
         # self.nodelist[0].e_b += 0.1
         generalizedPythagorasTree(self.nodelist[0], True, False)
-
 
     def set_best(self):
         # setting best
@@ -373,7 +373,7 @@ class MyGame(arcade.Window):
             self.nodelist[i].e_b = self.best[i]
         generalizedPythagorasTree(self.nodelist[0], True, False)
 
-    def force_iteration_strategy_0(self, a = 1):
+    def force_iteration_strategy_0(self, a=1):
         # a = 'strength' of iteration
         tree = TreeStruct()
 
@@ -408,7 +408,7 @@ class MyGame(arcade.Window):
             ancestor, length, furthest_child = self.common_ancestor(hit[0], hit[1])
             # if too far, mark a node in the middle of the path from the furthest to decrease
             if length > n_threshold or ancestor.e_b >= max_b:
-                single_ancestor = self.get_ith_parent(furthest_child, min(length/2, n_threshold))
+                single_ancestor = self.get_ith_parent(furthest_child, min(length / 2, n_threshold))
                 if single_ancestor.e_b > min_b:
                     mark_to_decrease.add(single_ancestor)
             else:
@@ -436,7 +436,6 @@ class MyGame(arcade.Window):
         generalizedPythagorasTree(self.nodelist[0], True, False)
         return False
 
-
     def on_key_press(self, key, modifiers):
         """ Called whenever the user presses a key. """
         if key == arcade.key.SPACE:
@@ -452,7 +451,6 @@ class MyGame(arcade.Window):
                 self.set_best()
             else:
                 print("No best found")
-
 
         # move camera around
         movespeed = 25
@@ -478,7 +476,7 @@ class MyGame(arcade.Window):
                 self.endfocus[0] -= movespeed
 
         # rotate camera
-        rotation = pi/18
+        rotation = pi / 18
         if key == arcade.key.LEFT:
             self.changed_view()
             self.focus[2] -= rotation
@@ -552,9 +550,9 @@ class MyGame(arcade.Window):
         # processed mouse/view changes, set back to false
         self.mousechanged = False
         self.viewchanged = False
-        #print("rendered frame")
-        #image = arcade.get_image()
-        #image.save('screenshot.png', 'PNG')
+        # print("rendered frame")
+        # image = arcade.get_image()
+        # image.save('screenshot.png', 'PNG')
 
 
 def handle_real_hit(node, hit):
@@ -604,7 +602,7 @@ def main():
             named = int(first.pop(0)) == 1
         else:
             named = False
-        print(named)
+        # print(named)
         nodes = [Node(i) for i in range(n)]
         root = nodes[0]
         mock = Node(-1)
