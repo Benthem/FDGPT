@@ -15,6 +15,8 @@ STRATEGY = 1  # 0 = Yoeri, 1 = Toon
 
 FILE = "input/filetree.in"
 
+tree = TreeStruct()
+
 
 def generalizedPythagorasTree(H, rebuild=False, changed=False):
     # no ancestor has changed yet, and we are rebuilding    
@@ -65,10 +67,14 @@ def generalizedPythagorasTree(H, rebuild=False, changed=False):
         t = computeSlopeEllipse(R.t, langle)
         c = computeCenterEllipse(R.c, R.x, R.y, R.t, a, width, height, t, e_a, e_b)
         if rebuild:
-            n.data.update(c, height, width, t)
+            if (n.data.c, n.data.x, n.data.y, n.data.t) != (c, height, width, t):
+                tree.removeRect(n.data)
+                n.data.update(c, height, width, t)
+                tree.addRect(n.data)
         else:
             r = Rectangle(c, height, width, t, n.name, R.depth + 1, n)
             n.data = r
+            tree.addRect(r)
         n.parent = H
         generalizedPythagorasTree(n, rebuild, changed)
 
@@ -314,13 +320,6 @@ class MyGame(arcade.Window):
         return node
 
     def count_hits(self, handle=False):
-        tree = TreeStruct()
-
-        # build tree
-        # TODO: handle adding/removing of rects
-        for node in self.nodelist:
-            tree.addRect(node.data)
-
         count = 0
         for node in self.nodelist:
             for rect in tree.query(node.data):
@@ -370,12 +369,6 @@ class MyGame(arcade.Window):
                 self.best[i] = self.nodelist[i].e_b
 
     def force_iteration_strategy_0(self, a=1):
-        # a = 'strength' of iteration
-        tree = TreeStruct()
-
-        # build tree from current nodes
-        for node in self.nodelist:
-            tree.addRect(node.data)
 
         # get hits
         hits = []
