@@ -353,6 +353,7 @@ class MyGame(arcade.Window):
                     count += 1
                     handle_real_hit(node, rect.node)
         print(count)
+        self.update_best(count)
 
         for node in self.nodelist:
             if node.strat_two.get('common', 0) > node.strat_two.get('path', 0):
@@ -373,6 +374,12 @@ class MyGame(arcade.Window):
             self.nodelist[i].e_b = self.best[i]
         generalizedPythagorasTree(self.nodelist[0], True, False)
 
+    def update_best(self, hits):
+        if hits < self.bestvalue:
+            self.bestvalue = hits
+            for i in range(0, len(self.nodelist)):
+                self.best[i] = self.nodelist[i].e_b
+
     def force_iteration_strategy_0(self, a = 1):
         # a = 'strength' of iteration
         tree = TreeStruct()
@@ -392,10 +399,7 @@ class MyGame(arcade.Window):
             print("No collisions!")
             return True
         print("Number of collisions = ", len(hits))
-        if len(hits) < self.bestvalue:
-            self.bestvalue = len(hits)
-            for i in range(0, len(self.nodelist)):
-                self.best[i] = self.nodelist[i].e_b
+        self.update_best(len(hits))
 
         # find nodes to modify, set their modification
         n_threshold = 5
