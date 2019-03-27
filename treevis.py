@@ -16,10 +16,10 @@ SCREEN_RATIO = SCREEN_WIDTH / SCREEN_HEIGHT
 SCREEN_TITLE = "500"
 DISPLAY_WEIGHT_AS_FILESIZE = True
 STRATEGY = 1  # 0 = Yoeri, 1 = Toon
-ROOTID = 243048
+ROOTID = 0
 MAX_B = (1 + math.sqrt(5)) / 2
 
-FILE = "input/taxonomy.in"
+FILE = "input/quaternary.in"
 BESTFILE = FILE[:-3] + "_" + str(ROOTID) + ".pickle"
 
 tree = TreeStruct()
@@ -345,15 +345,15 @@ class MyGame(arcade.Window):
         print("it: %d\t%d collissions" % (self.i, before))
         if before == 0:
             self.i = 0
-            print("No more collisions!")
+            print("No more collisions!")    
             return
         for node in self.nodelist:
             if node.strat_two.get('common', 0) > node.strat_two.get('path', 0):
                 node.e_b = min(1.1 * node.e_b, MAX_B)
             elif node.strat_two.get('common', 0) < node.strat_two.get('path', 0):
                 node.e_b *= 0.9
-            node.e_b += (1 - node.e_b) * node.strat_two.get('LR', 0.5)
-            node.strat_two['LR'] = node.strat_two.get('LR', 0.5) * 0.9
+            node.e_b += (1 - node.e_b) * node.strat_two.get('LR', 0.1)
+            node.strat_two['LR'] = node.strat_two.get('LR', 0.1) * 0.9
             node.strat_two['common'] = 0
             node.strat_two['path'] = 0
         # self.nodelist[ROOTID].e_b += 0.1
