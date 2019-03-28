@@ -9,12 +9,12 @@ def bboxoutside(b1, b2):
 
 
 class TreeStruct:
-    bbox = (-1000, -1000, 1000, 1000)
+    bbox = (-10000, -10000, 10000, 10000)
 
     ##
     # Maintain link from points to rectangle objects?
     def __init__(self):
-        self.index = Index(bbox=self.bbox, max_items=40, max_depth=40)
+        self.index = Index(bbox=self.bbox, max_items=40, max_depth=15)
 
     def addRect(self, rect):
         if (bboxoutside(rect.bbox, self.bbox)):

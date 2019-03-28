@@ -18,11 +18,11 @@ STRATEGY = 1  # 0 = Yoeri, 1 = Toon
 ROOTID = 0
 MAX_B = (1 + math.sqrt(5)) / 2
 
-FILE = "input/binary.in"
+FILE = "input/taxonomy.in"
 SCREEN_TITLE = FILE[6:-3]
 BESTFILE = FILE[:-3] + "_" + str(ROOTID) + ".pickle"
 BESTFILE_LR = FILE[:-3] + "_" + str(ROOTID) + "_LR.pickle"
-
+RENDER_UNTIL_DONE = True
 tree = TreeStruct()
 
 
@@ -148,7 +148,10 @@ class MyGame(arcade.Window):
         # STRAT STUFF
         if STRATEGY == 1:
             arcade.schedule(self.force_iteration_strategy_1, 0.05)
-        self.i = 0
+        if RENDER_UNTIL_DONE:
+            self.i = 1
+        else:
+            self.i = 0
 
         self.startfocus = []
         self.endfocus = []
@@ -158,6 +161,8 @@ class MyGame(arcade.Window):
         arcade.schedule(self.interpolate, 1 / self.fps)
         self.focusrect = self.nodelist[ROOTID].data
         self.focus = self.setfocus(self.focusrect)
+        # focus for taxonomy
+        self.focus[5] = 0.4
         self.startfocus = self.focus[:]
         # stack of (focusrect, focustype) where 0 = rect, 1 = zoom (different focus functions)
         self.focusstack = []
@@ -340,6 +345,7 @@ class MyGame(arcade.Window):
     ##
     # TOON STRAT
     def force_iteration_strategy_1(self, dt):
+        print("counting hits")
         if self.i == 0:
             return
         before = self.count_hits(True)
@@ -361,7 +367,8 @@ class MyGame(arcade.Window):
         generalizedPythagorasTree(self.nodelist[ROOTID], True, False)
         after = self.count_hits()
         self.update_best(after)
-        self.i -= 1
+        if not RENDER_UNTIL_DONE:
+            self.i -= 1
         if after == 0:
             self.i = 0
             print("No more collisions!")
@@ -580,9 +587,13 @@ class MyGame(arcade.Window):
         # processed mouse/view changes, set back to false
         self.mousechanged = False
         self.viewchanged = False
-        # print("rendered frame")
-        # image = arcade.get_image()
-        # image.save('screenshot.png', 'PNG')
+        if RENDER_UNTIL_DONE:
+            screenshotname = FILE[:-3] + '_' + str(self.i) + '.png'
+            print("rendered " + screenshotname)
+            image = arcade.get_image()
+            image.save(screenshotname, 'PNG')
+            self.i += 1
+        #self.focus[5] *= 0.8
 
 
 def handle_real_hit(node, hit):
