@@ -470,10 +470,11 @@ class MyGame(arcade.Window):
                 with open(BESTFILE, "rb") as f:
                     self.best = pickle.load(f)
                 if STRATEGY == 1:
-                    with open(BESTFILE_LR, "rb") as f:
-                        LR = pickle.load(f)
-                        for node in self.nodelist:
-                            node.strat_two['LR'] = LR.pop(0)
+                    if os.path.isfile(BESTFILE_LR):
+                        with open(BESTFILE_LR, "rb") as f:
+                            LR = pickle.load(f)
+                            for node in self.nodelist:
+                                node.strat_two['LR'] = LR.pop(0)
                 self.bestvalue = self.count_hits()
                 self.set_best(True)
             else:
