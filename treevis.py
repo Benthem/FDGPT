@@ -18,7 +18,7 @@ STRATEGY = 1  # 0 = Yoeri, 1 = Toon
 ROOTID = 0
 MAX_B = (1 + math.sqrt(5)) / 2
 
-FILE = "input/filetree_filesize.in"
+FILE = "input/binary.in"
 SCREEN_TITLE = FILE[6:-3]
 BESTFILE = FILE[:-3] + "_" + str(ROOTID) + ".pickle"
 BESTFILE_LR = FILE[:-3] + "_" + str(ROOTID) + "_LR.pickle"
@@ -366,6 +366,14 @@ class MyGame(arcade.Window):
             self.i = 0
             print("No more collisions!")
 
+    def reset(self):
+        self.i = 0
+        self.bestvalue = math.inf
+        self.best = [1] * len(self.nodelist)
+        for node in self.nodelist:
+            node.strat_two['LR'] = 0.1
+        self.set_best()
+
     def set_best(self, recount=False):
         for i in range(0, len(self.nodelist)):
             self.nodelist[i].e_b = self.best[i]
@@ -390,7 +398,6 @@ class MyGame(arcade.Window):
                 pickle.dump(self.best, f)
 
     def force_iteration_strategy_0(self, a=1):
-
         # get hits
         hits = []
         for node in self.nodelist:
@@ -471,8 +478,8 @@ class MyGame(arcade.Window):
                 self.set_best(True)
             else:
                 print("No stored configuration found")
-
-
+        if key == arcade.key.R:
+            self.reset()
 
         # move camera around
         movespeed = 25
