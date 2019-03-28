@@ -13,14 +13,15 @@ from hurry.filesize import size
 SCREEN_WIDTH = 1000
 SCREEN_HEIGHT = 1000
 SCREEN_RATIO = SCREEN_WIDTH / SCREEN_HEIGHT
-SCREEN_TITLE = "500"
 DISPLAY_WEIGHT_AS_FILESIZE = True
 STRATEGY = 1  # 0 = Yoeri, 1 = Toon
 ROOTID = 0
 MAX_B = (1 + math.sqrt(5)) / 2
 
-FILE = "input/quaternary.in"
+FILE = "input/filetree_filesize.in"
+SCREEN_TITLE = FILE[6:-3]
 BESTFILE = FILE[:-3] + "_" + str(ROOTID) + ".pickle"
+BESTFILE_LR = FILE[:-3] + "_" + str(ROOTID) + "_LR.pickle"
 
 tree = TreeStruct()
 
@@ -377,6 +378,12 @@ class MyGame(arcade.Window):
     def update_best(self, hits):
         if hits < self.bestvalue:
             self.bestvalue = hits
+            if STRATEGY == 1:
+                LR = []
+                for node in self.nodelist:
+                    LR.append(node.strat_two.get('LR', 0.1))
+                with open(BESTFILE_LR, "wb") as f:
+                    pickle.dump(LR, f)
             for i in range(0, len(self.nodelist)):
                 self.best[i] = self.nodelist[i].e_b
             with open(BESTFILE, "wb") as f:
@@ -455,6 +462,11 @@ class MyGame(arcade.Window):
             if os.path.isfile(BESTFILE):
                 with open(BESTFILE, "rb") as f:
                     self.best = pickle.load(f)
+                if STRATEGY == 1:
+                    with open(BESTFILE_LR, "rb") as f:
+                        LR = pickle.load(f)
+                        for node in self.nodelist:
+                            node.strat_two['LR'] = LR.pop(0)
                 self.bestvalue = self.count_hits()
                 self.set_best(True)
             else:
