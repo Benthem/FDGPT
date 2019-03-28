@@ -10,7 +10,7 @@ from math import sin, cos, pi
 # pip install hurry.filesize
 from hurry.filesize import size
 
-SCREEN_WIDTH = 1000
+SCREEN_WIDTH = 1600
 SCREEN_HEIGHT = 1000
 SCREEN_RATIO = SCREEN_WIDTH / SCREEN_HEIGHT
 DISPLAY_WEIGHT_AS_FILESIZE = True
@@ -335,7 +335,7 @@ class MyGame(arcade.Window):
                     count += 1
                     if handle:
                         handle_real_hit(node, rect.node)
-        return count
+        return math.ceil(count / 2)
 
     ##
     # TOON STRAT
