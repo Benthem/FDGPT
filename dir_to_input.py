@@ -12,11 +12,17 @@ this.usefilesize = True
 
 
 def recurse(clade):
+    name = clade.name
+    if name is None:
+        name = clade.confidence
     if not clade.clades:
-        return clade.name
+        return name
     phylodict = {}
     for child in clade.clades:
-        phylodict[child.name] = recurse(child)
+        name = child.name
+        if name is None:
+            name = child.confidence
+        phylodict[name] = recurse(child)
     return phylodict
 
 
@@ -111,8 +117,10 @@ def dict_to_output(dict):
 
 
 def main():
-    output = createpathdict('.')
+    #output = createpathdict('.')
     # output = createPhylodict('ncbi-taxonomy.tre')
+    output = createPhylodict('hierarchy_degree5_depth5_randomDegree_degenerated.tre')
+    print(output)
     outputlines = dict_to_output(output)
     # generate output from dir
     with open('filetree.in', 'w') as f:
