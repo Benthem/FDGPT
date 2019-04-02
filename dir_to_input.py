@@ -14,11 +14,17 @@ this.usefilesize = True
 
 
 def recurse(clade):
+    name = clade.name
+    if name is None:
+        name = clade.confidence
     if not clade.clades:
-        return clade.name
+        return name
     phylodict = {}
     for child in clade.clades:
-        phylodict[child.name] = recurse(child)
+        name = child.name
+        if name is None:
+            name = child.confidence
+        phylodict[name] = recurse(child)
     return phylodict
 
 
