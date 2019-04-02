@@ -22,7 +22,7 @@ FILE = "input/taxonomy.in"
 SCREEN_TITLE = FILE[6:-3]
 BESTFILE = FILE[:-3] + "_" + str(ROOTID) + ".pickle"
 BESTFILE_LR = FILE[:-3] + "_" + str(ROOTID) + "_LR.pickle"
-RENDER_UNTIL_DONE = True
+RENDER_UNTIL_DONE = False
 tree = TreeStruct()
 
 
@@ -345,9 +345,9 @@ class MyGame(arcade.Window):
     ##
     # TOON STRAT
     def force_iteration_strategy_1(self, dt):
-        print("counting hits")
         if self.i == 0:
             return
+        print("counting hits")
         before = self.count_hits(True)
         print("it: %d\t%d collissions" % (self.i, before))
         if before == 0:

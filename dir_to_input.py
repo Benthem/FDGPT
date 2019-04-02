@@ -1,5 +1,7 @@
 import collections
+import math
 import os
+import random
 import sys
 from Bio import Phylo
 # module level stuff
@@ -54,9 +56,10 @@ def createpathdict(dir):
     return filedir
 
 
-def dict_recurse(dict, id, dictname):
+def dict_recurse(dict, id, dictname, reverse):
     directchildren = this.weightbydirectchildren
-
+    if dictname == 'reverse':
+        reverse = True
     w = 0
 
     # leaf weight
@@ -67,7 +70,10 @@ def dict_recurse(dict, id, dictname):
     ids = []
     # if children, append them (should always be the case)
     if len(dict) > 0:
-        for key, value in dict.items():
+        toiterate = sorted(dict.items())
+        if reverse:
+            toiterate = reversed(toiterate)
+        for key, value in toiterate:
             if not isinstance(value, collections.Mapping):
                 istuple = isinstance(value, tuple)
                 # found a leaf
@@ -86,7 +92,7 @@ def dict_recurse(dict, id, dictname):
             else:
                 # recurse further
                 ids.append(this.id)
-                w += dict_recurse(value, this.id, key)
+                w += dict_recurse(value, this.id, key, reverse)
     if directchildren:
         w = len(dict) + 1
     outputstring = str(w) + ' ' + str(len(dict))
@@ -101,7 +107,7 @@ def dict_recurse(dict, id, dictname):
 def dict_to_output(dict):
     this.id = 0
     this.outputdict = {}
-    dict_recurse(dict, this.id, os.getcwd().split(os.sep)[-1])
+    dict_recurse(dict, this.id, os.getcwd().split(os.sep)[-1], False)
     sorted_by_id = sorted(this.outputdict.items(), key=lambda kv: kv[0])
     output = []
     output.append(str(len(sorted_by_id)) + ' 1\n')
@@ -110,12 +116,77 @@ def dict_to_output(dict):
     return output
 
 
+# generate hierarchy with specified branching factor and depth
+def nary_dict(branching, depth):
+    if depth == 0:
+        return 'leaf'
+    root = {}
+    for i in range(0, branching):
+        root[str(i)] = nary_dict(branching, depth-1)
+    return root
+
+# generate hierarchy with n children each, decreasing by 1 every iteration. Variance = random
+def recursive_hierarchy(n, c, variancec=0, varianced=0):
+    if n == 1:
+        return 'leaf'
+    root = {}
+    crange = c
+    if variancec > 0:
+        crange += random.randint(-variancec, variancec)
+        if crange <= 1:
+            return 'leaf'
+    drange = n
+    if varianced > 0:
+        drange += random.randint(-varianced, varianced)
+        if drange <= 1:
+            return 'leaf'
+    for i in range(0, crange):
+        root[str(i)] = recursive_hierarchy(n-1, c, variancec, varianced)
+    return root
+
+def degenerated_dict(n):
+    root = {}
+    current = root
+    while n > 0:
+        current['s'+str(n)] = nary_dict(2, 6)
+        current['t'+str(n)] = {}
+        current = current['t'+str(n)]
+        n -= 1
+    current['f1'] = nary_dict(2, 6)
+    current['f2'] = nary_dict(2, 6)
+    return root
+
+
+def self_similar(size, depth):
+    if depth == 0 or size == 1:
+        return 'leaf'
+    root = {}
+    for i in range(1, size+1):
+        root[str(i)] = self_similar(i, depth-1)
+    return root
+
+def symmetric_recursive(n, c, variancec=0, varianced=0):
+    hierarchy = recursive_hierarchy(n, c, variancec, varianced)
+    root = {}
+    root['normal'] = hierarchy
+    root['reverse'] = hierarchy
+    return root
+
 def main():
-    output = createpathdict('.')
+    #output = createpathdict('.')
+    #SYMMETRIC
+    #output = symmetric_recursive(7, 3, 2, 6)
+    #SELF_SIMILAR
+    #output = self_similar(7, 8)
+    #BIG
+    #output = recursive_hierarchy(15, 2, 1, 10)
+    #DEGEN
+    #output = degenerated_dict(10)
     # output = createPhylodict('ncbi-taxonomy.tre')
+    output = self_similar(7, 5)
     outputlines = dict_to_output(output)
     # generate output from dir
-    with open('filetree.in', 'w') as f:
+    with open('input/degen.in', 'w') as f:
         for line in outputlines:
             f.write(line)
 
