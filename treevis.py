@@ -14,14 +14,15 @@ SCREEN_WIDTH = 1600
 SCREEN_HEIGHT = 1000
 SCREEN_RATIO = SCREEN_WIDTH / SCREEN_HEIGHT
 DISPLAY_WEIGHT_AS_FILESIZE = True
-STRATEGY = 1  # 0 = Yoeri, 1 = Toon
-ROOTID = 0
+ROOTID = 260061
 MAX_B = (1 + math.sqrt(5)) / 2
 
 FILE = "input/taxonomy.in"
 SCREEN_TITLE = FILE[6:-3]
 BESTFILE = FILE[:-3] + "_" + str(ROOTID) + ".pickle"
 BESTFILE_LR = FILE[:-3] + "_" + str(ROOTID) + "_LR.pickle"
+BESTFILE_ROOT = FILE[:-3] + "_0.pickle"
+BESTFILE_ROOT_LR = FILE[:-3] + "_0_LR.pickle"
 RENDER_UNTIL_DONE = False
 tree = TreeStruct()
 
@@ -69,8 +70,10 @@ def generalizedPythagorasTree(H, rebuild=False, changed=False):
         # width (now y-coordinate) of child
         width = lwidth
         # same ratio as before for height
-        height = R.x * math.sin(originalangles[i] / 2)
-        height = min(height, width)
+        #SQUARE
+        height = lwidth
+        #height = R.x * math.sin(originalangles[i] / 2)
+        #height = min(height, width)
 
         t = computeSlopeEllipse(R.t, langle)
         c = computeCenterEllipse(R.c, R.x, R.y, R.t, a, width, height, t, e_a, e_b)
@@ -146,8 +149,7 @@ class MyGame(arcade.Window):
         self.r = 0
 
         # STRAT STUFF
-        if STRATEGY == 1:
-            arcade.schedule(self.force_iteration_strategy_1, 0.05)
+        arcade.schedule(self.force_strategy, 0.05)
         if RENDER_UNTIL_DONE:
             self.i = 1
         else:
@@ -342,9 +344,7 @@ class MyGame(arcade.Window):
                         handle_real_hit(node, rect.node)
         return math.ceil(count / 2)
 
-    ##
-    # TOON STRAT
-    def force_iteration_strategy_1(self, dt):
+    def force_strategy(self, dt):
         if self.i == 0:
             return
         print("counting hits")
@@ -393,99 +393,73 @@ class MyGame(arcade.Window):
     def update_best(self, hits):
         if hits < self.bestvalue:
             self.bestvalue = hits
-            if STRATEGY == 1:
-                LR = []
-                for node in self.nodelist:
-                    LR.append(node.strat_two.get('LR', 0.1))
-                with open(BESTFILE_LR, "wb") as f:
-                    pickle.dump(LR, f)
+            LR = []
+            for node in self.nodelist:
+                LR.append(node.strat_two.get('LR', 0.1))
+            with open(BESTFILE_LR, "wb") as f:
+                pickle.dump(LR, f)
             for i in range(0, len(self.nodelist)):
                 self.best[i] = self.nodelist[i].e_b
             with open(BESTFILE, "wb") as f:
                 pickle.dump(self.best, f)
 
-    def force_iteration_strategy_0(self, a=1):
-        # get hits
-        hits = []
-        for node in self.nodelist:
-            for rect in tree.query(node.data):
-                if check_real_hit(node, rect.node):
-                    hits.append((node, rect.node))
-        if len(hits) == 0:
-            # we are done
-            print("No collisions!")
+    def load_best(self):
+        if os.path.isfile(BESTFILE):
+            with open(BESTFILE, "rb") as f:
+                self.best = pickle.load(f)
+            if os.path.isfile(BESTFILE_LR):
+                with open(BESTFILE_LR, "rb") as f:
+                    LR = pickle.load(f)
+                    for node in self.nodelist:
+                        node.strat_two['LR'] = LR.pop(0)
             return True
-        print("Number of collisions = ", len(hits))
-        self.update_best(len(hits))
+        else:
+            return False
 
-        # find nodes to modify, set their modification
-        n_threshold = 5
-        max_b = 3
-        min_b = 0.1
-        mark_to_increase = set()
-        mark_to_decrease = set()
-        for hit in hits:
-            # find common ancestor
-            ancestor, length, furthest_child = self.common_ancestor(hit[0], hit[1])
-            # if too far, mark a node in the middle of the path from the furthest to decrease
-            if length > n_threshold or ancestor.e_b >= max_b:
-                single_ancestor = self.get_ith_parent(furthest_child, min(length / 2, n_threshold))
-                if single_ancestor.e_b > min_b:
-                    mark_to_decrease.add(single_ancestor)
-            else:
-                # if not, mark to increase b
-                mark_to_increase.add(ancestor)
-
-        # set forces
-        increaseforce = 0.2 * a
-        decreaseforce = -0.2 * a
-
-        forces = [1] * len(self.nodelist)
-        for node in mark_to_decrease:
-            forces[node.id] += decreaseforce
-        for node in mark_to_increase:
-            forces[node.id] += increaseforce
-
-        # apply forces
-        resetpower = math.pow(0.95, a)
-        for i in range(0, len(self.nodelist)):
-            self.nodelist[i].e_b *= forces[i]
-            # go towards resting state, e_b = 1
-            self.nodelist[i].e_b = math.pow(self.nodelist[i].e_b, resetpower)
-
-        # redraw tree
-        generalizedPythagorasTree(self.nodelist[ROOTID], True, False)
-        return False
+    def load_best_from_root(self):
+        if os.path.isfile(BESTFILE_ROOT):
+            with open(BESTFILE_ROOT, "rb") as f:
+                root_best = pickle.load(f)
+        else:
+            return False
+        if os.path.isfile(BESTFILE_ROOT_LR):
+            with open(BESTFILE_ROOT_LR, "rb") as f:
+                LR = pickle.load(f)
+        # new node array is sorted as well, merge in O(n)
+        pointer = 0
+        for i in range(0, len(root_best)):
+            if pointer < len(self.nodelist) and self.nodelist[pointer].id == i:
+                self.best[pointer] = root_best[i]
+                if LR is not None:
+                    self.nodelist[pointer].strat_two['LR'] = LR[i]
+                pointer += 1
+        return True
 
     def on_key_press(self, key, modifiers):
         """ Called whenever the user presses a key. """
         if key == arcade.key.SPACE:
-            if STRATEGY == 0:
-                for i in range(0, 50):
-                    if self.force_iteration_strategy_0(max(0.2, self.a)):
-                        break
-                self.a -= 0.2
-            else:
-                self.i = 50
+            # run the force strategy for 50 iterations
+            self.i = 50
         if key == arcade.key.LSHIFT:
             if self.bestvalue < math.inf:
                 self.set_best()
             else:
                 print("No best found")
         if key == arcade.key.LCTRL:
-            if os.path.isfile(BESTFILE):
-                with open(BESTFILE, "rb") as f:
-                    self.best = pickle.load(f)
-                if STRATEGY == 1:
-                    if os.path.isfile(BESTFILE_LR):
-                        with open(BESTFILE_LR, "rb") as f:
-                            LR = pickle.load(f)
-                            for node in self.nodelist:
-                                node.strat_two['LR'] = LR.pop(0)
-                self.bestvalue = self.count_hits()
+            success = self.load_best()
+            print("Loaded best from " + BESTFILE)
+            if success:
                 self.set_best(True)
             else:
                 print("No stored configuration found")
+        if key == arcade.key.LALT:
+            success = self.load_best_from_root()
+            print("Loaded best from " + BESTFILE_ROOT)
+            if success:
+                self.set_best(True)
+            else:
+                print("No stored configuration found")
+
         if key == arcade.key.R:
             self.reset()
 
@@ -596,18 +570,9 @@ class MyGame(arcade.Window):
         #self.focus[5] *= 0.8
 
 
-def handle_real_hit(node, hit):
-    # hit_strat_one(node, hit)
-    hit_strat_two(node, hit)
-
-
-# YOERI
-def hit_strat_one(node, hit):
-    pass
-
 
 # TOON
-def hit_strat_two(node, hit):
+def handle_real_hit(node, hit):
     list_1 = []
     a = node
     while a.parent is not None:
