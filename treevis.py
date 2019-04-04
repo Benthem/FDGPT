@@ -14,16 +14,22 @@ SCREEN_WIDTH = 1600
 SCREEN_HEIGHT = 1000
 SCREEN_RATIO = SCREEN_WIDTH / SCREEN_HEIGHT
 DISPLAY_WEIGHT_AS_FILESIZE = True
-ROOTID = 260061
+ROOTID = 0
 MAX_B = (1 + math.sqrt(5)) / 2
 
 FILE = "input/taxonomy.in"
 SCREEN_TITLE = FILE[6:-3]
+
+# filenames
 BESTFILE = FILE[:-3] + "_" + str(ROOTID) + ".pickle"
 BESTFILE_LR = FILE[:-3] + "_" + str(ROOTID) + "_LR.pickle"
+BESTFILE_SCORE = FILE[:-3] + "_" + str(ROOTID) + ".txt"
 BESTFILE_ROOT = FILE[:-3] + "_0.pickle"
 BESTFILE_ROOT_LR = FILE[:-3] + "_0_LR.pickle"
+BESTFILE_ROOT_SCORE = FILE[:-3] + "_0.txt"
+
 RENDER_UNTIL_DONE = False
+# quadtree for calculating hits
 tree = TreeStruct()
 
 
@@ -297,43 +303,6 @@ class MyGame(arcade.Window):
             # push current element on stack
             self.focusstack.append((self.focusrect, self.focus_type))
 
-    # return the first common ancestor, the number of layers between this ancestor and the furthest child, and which one is the furthest
-    def common_ancestor(self, node1, node2):
-        parent1 = node1.parent
-        parent2 = node2.parent
-        node1parents = {parent1}
-        node2parents = {parent2}
-        number_of = 1
-        foundcommon = parent1 == parent2
-        if foundcommon:
-            return parent1, number_of, node1
-        while True:
-            number_of += 1
-            # get parent of node 1, if we are not at root
-            if isinstance(parent1, Node):
-                parent1 = parent1.parent
-                if isinstance(parent1, Node):
-                    node1parents.add(parent1)
-                    # found first common ancestor
-                    if parent1 in node2parents:
-                        return parent1, number_of, node1
-            # haven't found common: try on other side, if we are not at root here
-            if isinstance(parent2, Node):
-                parent2 = parent2.parent
-                if isinstance(parent2, Node):
-                    node2parents.add(parent2)
-                    if parent2 in node1parents:
-                        return parent2, number_of, node2
-            if not isinstance(parent1, Node) and not isinstance(parent2, Node):
-                # root
-                return parent1, number_of, node1
-
-    def get_ith_parent(self, node, i):
-        while i > 0:
-            node = node.parent
-            i -= 1
-        return node
-
     def count_hits(self, handle=False):
         count = 0
         for node in self.nodelist:
@@ -393,15 +362,24 @@ class MyGame(arcade.Window):
     def update_best(self, hits):
         if hits < self.bestvalue:
             self.bestvalue = hits
-            LR = []
-            for node in self.nodelist:
-                LR.append(node.strat_two.get('LR', 0.1))
-            with open(BESTFILE_LR, "wb") as f:
-                pickle.dump(LR, f)
-            for i in range(0, len(self.nodelist)):
-                self.best[i] = self.nodelist[i].e_b
-            with open(BESTFILE, "wb") as f:
-                pickle.dump(self.best, f)
+            # check if this is better than what we have stored on disk
+            savedscore = math.inf
+            if os.path.exists(BESTFILE_SCORE):
+                with open(BESTFILE_SCORE, 'r') as f:
+                    savedscore = int(f.read())
+            if self.bestvalue < savedscore:
+                print("New best score found, writing to file")
+                LR = []
+                for node in self.nodelist:
+                    LR.append(node.strat_two.get('LR', 0.1))
+                with open(BESTFILE_LR, "wb") as f:
+                    pickle.dump(LR, f)
+                for i in range(0, len(self.nodelist)):
+                    self.best[i] = self.nodelist[i].e_b
+                with open(BESTFILE, "wb") as f:
+                    pickle.dump(self.best, f)
+                with open(BESTFILE_SCORE, 'w') as f:
+                    f.write(str(self.bestvalue))
 
     def load_best(self):
         if os.path.isfile(BESTFILE):
@@ -412,6 +390,9 @@ class MyGame(arcade.Window):
                     LR = pickle.load(f)
                     for node in self.nodelist:
                         node.strat_two['LR'] = LR.pop(0)
+            if os.path.isfile(BESTFILE_SCORE):
+                with open(BESTFILE_SCORE, 'r') as f:
+                    self.bestvalue = int(f.read())
             return True
         else:
             return False
@@ -449,14 +430,15 @@ class MyGame(arcade.Window):
             success = self.load_best()
             print("Loaded best from " + BESTFILE)
             if success:
-                self.set_best(True)
+                self.set_best(False)
             else:
                 print("No stored configuration found")
         if key == arcade.key.LALT:
             success = self.load_best_from_root()
             print("Loaded best from " + BESTFILE_ROOT)
             if success:
-                self.set_best(True)
+                self.set_best(False)
+                self.update_best(self.count_hits())
             else:
                 print("No stored configuration found")
 
@@ -632,7 +614,6 @@ def main():
     print("Total nodes:", len(nodes))
     print("Generating tree")
     generalizedPythagorasTree(root)
-    toDelete = set()
     print("Finding nodes to keep")
     newnodes = []
     for node in nodes:
