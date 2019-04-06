@@ -10,14 +10,14 @@ from math import sin, cos, pi
 # pip install hurry.filesize
 from hurry.filesize import size
 
-SCREEN_WIDTH = 1600
-SCREEN_HEIGHT = 1000
+SCREEN_WIDTH = 1000
+SCREEN_HEIGHT = 600
 SCREEN_RATIO = SCREEN_WIDTH / SCREEN_HEIGHT
 DISPLAY_WEIGHT_AS_FILESIZE = True
 ROOTID = 0
 MAX_B = (1 + math.sqrt(5)) / 2
 
-FILE = "input/taxonomy.in"
+FILE = "input/p/degen.in"
 SCREEN_TITLE = FILE[6:-3]
 
 # filenames
@@ -31,7 +31,6 @@ BESTFILE_ROOT_SCORE = FILE[:-3] + "_0.txt"
 RENDER_UNTIL_DONE = False
 # quadtree for calculating hits
 tree = TreeStruct()
-
 
 def generalizedPythagorasTree(H, rebuild=False, changed=False):
     # no ancestor has changed yet, and we are rebuilding    
@@ -169,8 +168,6 @@ class MyGame(arcade.Window):
         arcade.schedule(self.interpolate, 1 / self.fps)
         self.focusrect = self.nodelist[ROOTID].data
         self.focus = self.setfocus(self.focusrect)
-        # focus for taxonomy
-        self.focus[5] = 0.4
         self.startfocus = self.focus[:]
         # stack of (focusrect, focustype) where 0 = rect, 1 = zoom (different focus functions)
         self.focusstack = []
@@ -532,7 +529,7 @@ class MyGame(arcade.Window):
             if DISPLAY_WEIGHT_AS_FILESIZE:
                 arcade.draw_text("%d: %s | size: %s" % (self.highlighted.node.id, self.highlighted.node.name, size(self.highlighted.node.w)), 50, 50, arcade.color.BLACK, 24)
             else:
-                arcade.draw_text("%d: %s" % (self.highlighted.node.id, self.highlighted.node.name), 50, 50,
+                arcade.draw_text("%d: %s | weight: %s" % (self.highlighted.node.id, self.highlighted.node.name, self.highlighted.node.w), 50, 50,
                                  arcade.color.BLACK, 24)
 
         # draw selection box if applicable

@@ -76,7 +76,6 @@ def dict_recurse(dict, id, dictname, reverse):
     ids = []
     # if children, append them (should always be the case)
     if len(dict) > 0:
-        print(dict.items())
         toiterate = sorted(dict.items())
         if reverse:
             toiterate = reversed(toiterate)
@@ -189,12 +188,12 @@ def main():
     #output = recursive_hierarchy(15, 2, 1, 10)
     #DEGEN
     #output = degenerated_dict(10)
-    treename = 'symmectric_hierarchy_degree5_depth10_randomDegree_symmetric'
-    output = createPhylodict(treename + '.tre')
-    # output = createPhylodict('ncbi-taxonomy.tre')
+    #output = createPhylodict('ncbi-taxonomy.tre')
     #output = self_similar(7, 5)
     #output = nary_dict(2, 8)
     #output = symmetric_recursive(8, 5, 7, 7)
+    treename = 'deep_hierarchy_degree3_depth30_randomDegree'
+    output = createPhylodict(treename + '.tre')
     outputlines = dict_to_output(output)
     # generate output from dir
     with open('input/p/'+treename+'.in', 'w') as f:
