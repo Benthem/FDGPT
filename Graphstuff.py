@@ -1,7 +1,11 @@
 import math
 from math import pi, cos, sin
 from EllipseStuff import translateAtAngle
+import csv
+import sys
 
+# let me use global variables mr python
+graphstuff = sys.modules[__name__]
 
 # should probably hand pick these colours, now a simple transition from R to B and B to G
 colors = []
@@ -13,6 +17,16 @@ for i in range(0, colortransition + 1):
 for i in range(0, colortransition + 1):
     colors.append((0, int(0 + (255 / colortransition) * i), int(255 - (255 / colortransition) * i), 100))
 
+alpha = 200
+graphstuff.max_depth = 0
+# load colors from plasma.csv
+plasma = []
+with open('plasma_mod.csv') as f:
+    csv_reader = csv.reader(f, delimiter=',')
+    for color in csv_reader:
+        plasma.append((int(color[0]), int(color[1]), int(color[2]), alpha))
+# reverse
+plasma.reverse()
 
 class Node(object):
     def __init__(self, id, weight=0, data=None, parent=None):
@@ -57,6 +71,8 @@ class Rectangle(object):
         self.depth = depth
         self.node = node
         self.setbbox()
+        if depth > graphstuff.max_depth:
+            graphstuff.max_depth = depth
 
     def update(self, c, x, y, t):
         self.c = c
@@ -112,10 +128,8 @@ class Rectangle(object):
 
     def draw(self, arcade, dx, dy, dt, rx, ry, zoom):
         # print(self.c)
-        if self.depth > len(colors) - 1:
-            color = colors[len(colors) - 1]
-        else:
-            color = colors[self.depth]
+        color_index = max(0, min(int(self.depth / graphstuff.max_depth * len(plasma)), len(plasma) - 1))
+        color = plasma[color_index]
         arcade.draw_rectangle_filled(
             *self.offsetpoint(self.c[0], self.c[1], dx, dy, dt, (rx, ry), zoom),
             self.x * zoom,
