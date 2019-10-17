@@ -1,0 +1,11 @@
+arcade==2.1.3
+attrs==19.3.0
+biopython==1.74
+future==0.18.0
+hurry.filesize==0.9
+numpy==1.17.2
+Pillow==6.2.0
+pyglet==1.4.5
+pyglet-ffmpeg2==0.1.15
+Pyqtree==1.0.0
+pytiled-parser==0.9.0
