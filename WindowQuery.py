@@ -31,14 +31,3 @@ class TreeStruct:
         # return candidates
         # TBD if we want to make the check both ways or are okay with overlaps only being detected on one end
         return [candidate for candidate in candidates if rect.overlaps(candidate) or candidate.overlaps(rect)]
-
-'''
-sklearn KDTree
-scipy.spatial.cKDTree
-  Store datapoints by reference, when starting query convert to cKDTree and perform queries
-
-Pyqtree
-  Continuously delete/insert if position changes
-  Might have better performance due to number of changes being low
-'''
-
