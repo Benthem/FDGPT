@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import collections
 import math
 import os
@@ -179,24 +181,42 @@ def symmetric_recursive(n, c, variancec=0, varianced=0):
     return root
 
 def main():
+    # Current directory
     #output = createpathdict('.')
-    #SYMMETRIC
+    #treename = 'dir'
+    
+    # SYMMETRIC
     #output = symmetric_recursive(7, 3, 2, 6)
-    #SELF_SIMILAR
+    #treename = 'symmetric'
+    
+    # SELF_SIMILAR
     #output = self_similar(7, 8)
-    #BIG
+    output = self_similar(7, 5)
+    treename = 'self_similar'
+    
+    # BIG
     #output = recursive_hierarchy(15, 2, 1, 10)
-    #DEGEN
+    #treename = 'big'
+    
+    # DEGEN
     #output = degenerated_dict(10)
-    #output = createPhylodict('ncbi-taxonomy.tre')
-    #output = self_similar(7, 5)
+    #treename = 'degen'
+    
+    # Newick format
+    #treename = 'ncbi-taxonomy'
+    #output = createPhylodict(treename + '.tre')
+
+    # NARY
     #output = nary_dict(2, 8)
-    #output = symmetric_recursive(8, 5, 7, 7)
-    treename = 'deep_hierarchy_degree3_depth30_randomDegree'
-    output = createPhylodict(treename + '.tre')
+    #treename = 'nary'
+
     outputlines = dict_to_output(output)
-    # generate output from dir
-    with open('input/p/'+treename+'.in', 'w') as f:
+    
+    # generate output
+    path = 'input/p/'
+    if not os.path.exists(path):
+        os.mkdir(path)
+    with open(path + treename + '.in', 'w') as f:
         for line in outputlines:
             f.write(line)
 
