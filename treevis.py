@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import os
 
 from Graphstuff import *
@@ -6,6 +8,7 @@ from EllipseStuff import *
 import arcade
 import pickle
 import codecs
+import sys
 from math import sin, cos, pi
 # pip install hurry.filesize
 from hurry.filesize import size
@@ -17,17 +20,16 @@ DISPLAY_WEIGHT_AS_FILESIZE = True
 ROOTID = 0
 MAX_B = (1 + math.sqrt(5)) / 2
 
-FILE = "input/p/degen.in"
-SCREEN_TITLE = FILE[6:-3]
+FILE = "input/selfsimilar_hierarchy_degree5_depth10_selfSimilar.in"
+BESTFILE = ""
+BESTFILE_LR = ""
+BESTFILE_SCORE = ""
+BESTFILE_ROOT = ""
+BESTFILE_ROOT_LR = ""
+BESTFILE_ROOT_SCORE = ""
 
-# filenames
-BESTFILE = FILE[:-3] + "_" + str(ROOTID) + ".pickle"
-BESTFILE_LR = FILE[:-3] + "_" + str(ROOTID) + "_LR.pickle"
-BESTFILE_SCORE = FILE[:-3] + "_" + str(ROOTID) + ".txt"
-BESTFILE_ROOT = FILE[:-3] + "_0.pickle"
-BESTFILE_ROOT_LR = FILE[:-3] + "_0_LR.pickle"
-BESTFILE_ROOT_SCORE = FILE[:-3] + "_0.txt"
-
+# zoom constant, 0.5 means 50% of screen width must be covered by focused rectangle width
+ZOOMC = 0.12
 RENDER_UNTIL_DONE = False
 # quadtree for calculating hits
 tree = TreeStruct()
@@ -195,10 +197,8 @@ class MyGame(arcade.Window):
 
     # the offset for drawing, when focused on rect
     def setfocus(self, rect):
-        # zoom constant, 0.5 means 50% of screen width must be covered by focused rectangle width
-        zoomc = 0.2
         yoffset = SCREEN_HEIGHT / 4
-        focus = [-rect.c[0] + SCREEN_WIDTH / 2, -rect.c[1] + SCREEN_HEIGHT / 2 - yoffset, rect.t, rect.c[0], rect.c[1], SCREEN_WIDTH / rect.y * zoomc]
+        focus = [-rect.c[0] + SCREEN_WIDTH / 2, -rect.c[1] + SCREEN_HEIGHT / 2 - yoffset, rect.t, rect.c[0], rect.c[1], SCREEN_WIDTH / rect.y * ZOOMC]
         return focus
 
     def setfocus_selection(self, rect):
@@ -579,6 +579,23 @@ def handle_real_hit(node, hit):
 
 def main():
     global ROOTID
+    global FILE, BESTFILE, BESTFILE_LR, BESTFILE_SCORE, BESTFILE_ROOT,BESTFILE_ROOT_LR, BESTFILE_ROOT_SCORE
+    
+    if (len(sys.argv) >= 2):
+        FILE = sys.argv[1]
+        if not os.path.isfile(FILE):
+            print("Invalid file")
+            return
+            
+    
+    # filenames
+    BESTFILE = FILE[:-3] + "_" + str(ROOTID) + ".pickle"
+    BESTFILE_LR = FILE[:-3] + "_" + str(ROOTID) + "_LR.pickle"
+    BESTFILE_SCORE = FILE[:-3] + "_" + str(ROOTID) + ".txt"
+    BESTFILE_ROOT = FILE[:-3] + "_0.pickle"
+    BESTFILE_ROOT_LR = FILE[:-3] + "_0_LR.pickle"
+    BESTFILE_ROOT_SCORE = FILE[:-3] + "_0.txt"
+    
     with open(FILE, 'r') as f:
         s = f.read().split('\n')
         first = s.pop(0).split()
@@ -618,7 +635,8 @@ def main():
             newnodes.append(node)
     print("Total nodes:", len(newnodes))
     ROOTID = newnodes.index(root)
-    window = MyGame(SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_TITLE, root, newnodes)
+    Screen_title = FILE[6:-3]
+    window = MyGame(SCREEN_WIDTH, SCREEN_HEIGHT, Screen_title, root, newnodes)
     arcade.run()
 
 

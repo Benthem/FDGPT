@@ -4,7 +4,7 @@
 
 Generalized Pythagoras trees [1] are an aesthetic approach to visualize hierarchies. However, visual overlap may decrease readability. Our approach removes all overlap and maintains the general structure of a tree.
 
-This project provides the source code for the short paper [Overlap-free Drawing of Generalized Pythagoras Trees for Hierarchy Visualization](https://arxiv.org/pdf/1907.12845.pdf).
+This project provides the source code for the short paper [Overlap-Free Drawing of Generalized Pythagoras Trees for Hierarchy Visualization](https://arxiv.org/pdf/1907.12845.pdf).
 
 ## Getting Started
 
@@ -17,10 +17,10 @@ pip install -r requirements.txt
 
 Start the system using `treevis.py`:
 ```
-python treevis.py
+python treevis.py [input.in]
 ```
 
-There are multiple example input files available in the `input` directory. You have to specify the input file in `treevis.py`.
+There are multiple example input files available in the `input` directory. If no file is given when executing `treevis.py`, an example file will be loaded.
 
 ## General Control
 
@@ -76,14 +76,14 @@ The IDs are assigned to the nodes as they occur in the input file starting with 
 
 ## Citation
 
-When referencing our work, please cite the paper [Overlap-free Drawing of Generalized Pythagoras Trees for Hierarchy Visualization](https://arxiv.org/pdf/1907.12845.pdf).
+When referencing our work, please cite the paper [Overlap-Free Drawing of Generalized Pythagoras Trees for Hierarchy Visualization](https://arxiv.org/pdf/1907.12845.pdf).
 
-T. Munz, M. Burch, T. van Benthem, Y. Poels, F. Beck, and D. Weiskopf. Overlap-free Drawing of Generalized Pythagoras Trees for Hierarchy Visualization. In IEEE VIS Short Papers, to appear. IEEE, 2019. 
+T. Munz, M. Burch, T. van Benthem, Y. Poels, F. Beck, and D. Weiskopf. Overlap-Free Drawing of Generalized Pythagoras Trees for Hierarchy Visualization. In IEEE VIS Short Papers, to appear. IEEE, 2019. 
 
 ```
 @article{vis2019pythagoras,
   author    = {Munz, Tanja and Burch, Michael and van Benthem, Toon and Poels, Yoeri and Beck, Fabian and Weiskopf, Daniel},
-  title     = {Overlap-free Drawing of Generalized Pythagoras Trees for Hierarchy Visualization},
+  title     = {Overlap-Free Drawing of Generalized Pythagoras Trees for Hierarchy Visualization},
   journal   = {IEEE VIS Short Papers, to appear},
   publisher = {IEEE},
   year      = {2019}
