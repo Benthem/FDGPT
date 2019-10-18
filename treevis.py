@@ -584,9 +584,14 @@ def main():
     if (len(sys.argv) >= 2):
         FILE = sys.argv[1]
         if not os.path.isfile(FILE):
-            print("Invalid file")
+            print("File not found.")
             return
-            
+        if (len(sys.argv) >= 3):
+            try:
+                ROOTID = int(sys.argv[2])
+            except ValueError:
+                print("Invalid root ID.")
+                return
     
     # filenames
     BESTFILE = FILE[:-3] + "_" + str(ROOTID) + ".pickle"
@@ -607,6 +612,9 @@ def main():
             named = False
         # print(named)
         nodes = [Node(i) for i in range(n)]
+        if not (ROOTID >= 0 and ROOTID < len(nodes)):
+            print("Root ID out of range.")
+            return
         root = nodes[ROOTID]
         mock = Node(-1)
         root.parent = mock

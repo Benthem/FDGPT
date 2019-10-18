@@ -17,10 +17,11 @@ pip install -r requirements.txt
 
 Start the system using `treevis.py`:
 ```
-python treevis.py [input.in]
+python treevis.py [input.in [rootID]]
 ```
 
 There are multiple example input files available in the `input` directory. If no file is given when executing `treevis.py`, an example file will be loaded.
+To visualize a subtree, rootID has to be specified. This will use the node with the given ID as root node (see input format for more information about node IDs).
 
 ## General Control
 
@@ -28,10 +29,10 @@ First, the hierarchy will be visualized as generalized Pythagoras tree.
 
 Use the following keys to run and visualize results of the algorithm:
 * `Space` to run for 50 iterations
-* `Left Ctrl` to load best configuration from automatically saved cache file
-* `Left Alt` to load best configuration from from automatically saved cache file, from root node
-* `Left Shift` to load best configuration from current session
-* `R` to reset to the generalized Pythagoras tree befor removing overlap
+* `Left Ctrl` to load best configuration from automatically saved cache file determined for the same root ID
+* `Left Alt` to load best configuration from automatically saved cache file determined for the root (with ID 0) of the hierarchy and merge it into the subtree currently being visualized
+* `Left Shift` to load best configuration from current session (from internal memory)
+* `R` to reset to the generalized Pythagoras tree before removing overlap
 
 We provide interaction to navigate in the view:
 * Click on a node to move this node to the position of the root node and zoom
