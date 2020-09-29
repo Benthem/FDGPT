@@ -4,7 +4,7 @@
 
 Generalized Pythagoras trees [1] are an aesthetic approach to visualize hierarchies. However, visual overlap may decrease readability. Our approach removes all overlap and maintains the general structure of a tree.
 
-This project provides the source code for the short paper [Overlap-Free Drawing of Generalized Pythagoras Trees for Hierarchy Visualization](https://arxiv.org/pdf/1907.12845.pdf).
+This project provides the source code for the short paper [Overlap-Free Drawing of Generalized Pythagoras Trees for Hierarchy Visualization](https://ieeexplore.ieee.org/document/8933606).
 
 ## Getting Started
 
@@ -77,17 +77,17 @@ The IDs are assigned to the nodes as they occur in the input file starting with 
 
 ## Citation
 
-When referencing our work, please cite the paper [Overlap-Free Drawing of Generalized Pythagoras Trees for Hierarchy Visualization](https://arxiv.org/pdf/1907.12845.pdf).
+When referencing our work, please cite the paper [Overlap-Free Drawing of Generalized Pythagoras Trees for Hierarchy Visualization](https://ieeexplore.ieee.org/document/8933606).
 
-T. Munz, M. Burch, T. van Benthem, Y. Poels, F. Beck, and D. Weiskopf. Overlap-Free Drawing of Generalized Pythagoras Trees for Hierarchy Visualization. In IEEE VIS Short Papers, to appear. IEEE, 2019. 
+T. Munz, M. Burch, T. v. Benthem, Y. Poels, F. Beck and D. Weiskopf. Overlap-Free Drawing of Generalized Pythagoras Trees for Hierarchy Visualization. In Proceedings of 2019 IEEE Visualization Conference (VIS), pp. 251-255, 2019. 
 
 ```
-@article{vis2019pythagoras,
-  author    = {Munz, Tanja and Burch, Michael and van Benthem, Toon and Poels, Yoeri and Beck, Fabian and Weiskopf, Daniel},
-  title     = {Overlap-Free Drawing of Generalized Pythagoras Trees for Hierarchy Visualization},
-  journal   = {IEEE VIS Short Papers, to appear},
-  publisher = {IEEE},
-  year      = {2019}
+@inproceedings{vis2019pythagoras,
+  author={Munz, Tanja and Burch, Michael and van Benthem, Toon and Poels, Yoeri and Beck, Fabian and Weiskopf, Daniel},
+  booktitle={2019 IEEE Visualization Conference (VIS)}, 
+  title={Overlap-Free Drawing of Generalized Pythagoras Trees for Hierarchy Visualization}, 
+  year={2019},
+  pages={251-255},
 }
 ```
     
